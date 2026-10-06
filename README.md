@@ -137,7 +137,7 @@ in [`docs/hosting-plan.md`](docs/hosting-plan.md).
 ## Security
 
 - **Content-Security-Policy** on both pages, and no inline scripts.
-- **Leaflet is integrity-checked** (SRI) when it loads from the CDN.
+- **Leaflet is self-hosted** (`vendor/leaflet-1.9.4/`) and integrity-checked (SRI); no third-party script CDNs.
 - **Data is never treated as markup:** everything from `photos.json`, the labels and check-ins is escaped or inserted as text.
 - **Photo URLs are allow-listed** (https or relative only).
 - **The local dev server:**
