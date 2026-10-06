@@ -17,7 +17,7 @@ Serve with `python3 -m http.server 5173` from the repo root (already the convent
 | Wall realism (archived) | `js/engine.js` (light/shadows, tape, notes), `js/textures.js`, `css/materials.css`, `spike/lab.html` (tuning bench) |
 | Wall motion (archived) | `js/intro.js` (opening scene), `js/focus.js` (click-to-close-up), `css/intro.css` |
 | Map drawing | `js/map/sketch-map.js` (layers), `pencil.js` (stroke primitives), `geo.js` (coordinates), `terrain.js` (DEM), `relief.js`, `wakhan.js`, `tiers.js` |
-| Map page (the site) | `index.html` (Leaflet, CRS.Simple; preloader + opening), `js/map/opening.js` (drawn-in opening), `js/map/photos.js` (stacks), `js/map/almanac.js` (today note), `data/photos.json`; `spike/map-lab.html` = style bench |
+| Map page (the site) | `index.html` (markup + CSS) + `js/site.js` (all page logic: Leaflet, preloader, opening, zoom), `js/map/opening.js` (drawn-in opening), `js/map/photos.js` (stacks), `js/map/almanac.js` (today note), `data/photos.json`; `spike/map-lab.html` = style bench |
 | Check-ins ("last seen here") | `checkin/index.html` (private form), `js/checkin/core.js` (rules + guardrails), `tools/dev-server.mjs` (`npm run dev`, :5174, local stand-in for the Worker), `js/map/checkin-pin.js` (live pin), `tests/checkin.test.mjs` |
 | Data & build | `tools/*.py`, `tools/build-tiles.mjs`, `data/`, `tiles/` (generated) |
 | Plans & research | `docs/pin-drop-plan.md`, `docs/zoom-plan.md`, `docs/hosting-plan.md` (going public: Cloudflare Pages + R2 proposal), `research/*.md` |
@@ -34,3 +34,9 @@ Serve with `python3 -m http.server 5173` from the repo root (already the convent
 Use `sketch-map` before changing anything on the map, `map-build` to rebuild tiles/data,
 `visual-check` to look at a result (the Chrome extension is flaky; headless Chrome is reliable).
 Run `npm test` after touching `js/map/geo.js` or the map's projection.
+
+## Security & publishing
+Public repo: https://github.com/choongching/afghan-field-notes. Pages have a Content-Security-Policy (no inline
+scripts — page logic lives in `js/site.js` / `checkin/checkin.js`), Leaflet loads with SRI, and data from
+`photos.json` / `map.json` / check-ins is escaped or set via textContent. New external hosts (e.g. the R2 photo
+domain) must be added to the CSP meta tags. Never commit `~/.field-notes`, `local-r2/`, `data/raw/`, `tiles/raw/`.
