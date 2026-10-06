@@ -77,9 +77,9 @@ per zoom tier → shown in Leaflet with live hand-lettered labels on top.
 | `js/map/wakhan.js` | Wakhan detail (tier 2): valley line, peaks, passes, lakes, doodles, label placer |
 | `js/map/tiers.js` | `TIERS` (layers per zoom tier + reveal range + baked zooms), `labelRule()` |
 | `index.html` + `js/site.js` | **the whole site** (markup/CSS in index.html; all logic in js/site.js — no inline scripts, CSP): Leaflet `CRS.Simple`, tier fades, live labels, declutter, two-state zoom, `html.zoomed` class |
-| `js/map/photos.js` + `data/photos.json` | photo **stacks** per place (`stacks[].photos[]`; deckle-edged prints, map units, scale with zoom): messy pile → hover only loosens → **click** deals a tidy grid (zooms to 3× first at the overview) → click a print = lightbox with ←/→ → Esc / map click gathers. Placed via `geo.toMap`; `dx/dy` offset + pencil leader to a red ring; `precision: hidden` skips a stack |
+| `js/map/photos.js` + `data/photos.json` | photo **stacks** per place (`stacks[].photos[]` = `{img, thumb?, caption}`; deckle-edged prints, map units, scale with zoom): messy pile → hover only loosens → **click** (pile or diamond) deals a tidy grid (zooms to 3× first at the overview) → click a print = lightbox with ←/→ → Esc / map click gathers. Placed via `geo.toMap`; `dx/dy` offset + pencil leader to the stop's turquoise diamond; `precision: hidden` skips a stack. All JSON input is sanitised (`esc`, `num`, `safeUrl`) |
 | `js/map/opening.js` | opening scene: reveals 4 baked **plates** (`tiles/intro/*.webp`) on a canvas through brush masks that follow real geometry (`tiles/intro.json` from `introGuides()` in sketch-map.js); `SCHEDULE` = timings |
-| `js/map/checkin-pin.js` | live **"I was here!" margin note** (user's choice over ring/pushpin/pulse/footprints): a bowed red pencil arrow from open paper (74 css px, 8 candidate directions, picks the one whose note covers fewest labels/stacks/diamonds) stopping short of the spot (gap grows with the stop's diamond at zoom), "I was here!" + "5 days ago" at the tail; zoomed adds place + “note”. Re-laid out on zoomend; arrow draws in (dashoffset). Polls `local-r2/public/checkin/latest.json` every 30 s; text via textContent only. Rules: `js/checkin/core.js` |
+| `js/map/checkin-pin.js` | live **"I was here!" margin note** (user's choice over ring/pushpin/pulse/footprints): a bowed red pencil arrow from open paper (74 css px, 8 candidate directions, picks the one whose note covers fewest labels/stacks/diamonds) stopping short of the spot (gap grows with the stop's diamond at zoom), "I was here!" + "5 days ago" at the tail; zoomed adds place + “note”. Re-laid out on zoomend; arrow draws in (dashoffset). Polls `local-r2/public/checkin/latest.json` every 30 s (5 min while it's 404); text via textContent only. Rules: `js/checkin/core.js` |
 | `js/map/almanac.js` | "Afghanistan, today" (shown at `scale(1.4)` — 2× was "too big"; the hint sits left of centre to clear it): Kabul time (`Asia/Kabul`), date (`Intl`), temperature °C + humidity from Open-Meteo (no key; Kabul coords only). Fixed bottom-right |
 
 ## Rules that keep it working
@@ -90,7 +90,7 @@ per zoom tier → shown in Leaflet with live hand-lettered labels on top.
 3. **Put the new layer in a tier** in `tiers.js` (`t0` always visible; `t1` relief ~1.3–1.7×;
    `t2` detail ~1.8–2.2×; `t3` margins ~2.3–2.7×). Unlisted layers are never baked.
 4. **Text is `<text class="…">`** inside a layer; it is stripped from tiles and becomes a live label.
-   Give it a class the viewer knows (`FONT` map in `index.html`) and a rule in `labelRule()`.
+   Give it a class the viewer knows (`FONT` map in `js/site.js`) and a rule in `labelRule()`.
 5. **Drawing at another scale** (like the Wakhan at 2.5×): wrap in `<g transform>`, set
    `FX.xform` while drawing so carbon tones land in the right place, and add `data-map="ox oy s"`
    on the layer group so `extractLabels` maps label coords back.
@@ -103,7 +103,7 @@ per zoom tier → shown in Leaflet with live hand-lettered labels on top.
     Collision footprint = circles of 0.5 × font size along the baseline; priority 0 wins.
 10. Use `pointInRings(lon, lat, data.afghanistan)` to keep marks inside the country.
 
-## Page UI conventions (index.html)
+## Page UI conventions (index.html = markup/CSS · js/site.js = logic)
 - **Overlays are lettered, not boxed**: UI on the paper (the today note) follows the hand-drawn map-legend
   reference — caps label, dotted leader, handwritten value; no card, frame or shadow.
 - **General details step aside when zoomed in**: `html.zoomed` is toggled on `zoomanim` (so fades run *with*
@@ -166,11 +166,11 @@ per zoom tier → shown in Leaflet with live hand-lettered labels on top.
   (The local python server doesn't compress — Leaflet shows 147 KB there, ~42 KB on Cloudflare.)
 
 ## Opening scene (preloader → drawing → names → notes → photos)
-- Preloader `#preload`: hand-lettered title + a pencil line = load progress (`track()` in index.html). Min 0.9 s; never
+- Preloader `#preload`: hand-lettered title + a pencil line = load progress (`track()` in js/site.js). Min 0.9 s; never
   use `img.decode()` (hangs in background tabs); if the tab is hidden, wait for `visibilitychange` before playing.
 - Order (s): border traced from the west 0–1.55 → rivers 1.15 → ridges/hills/deserts hatched 1.6 → names written
   letter-by-letter (neighbours 1.85, regions 2.3, cities 2.85–3, rest 3.45) → marks 2.9 → today note/controls 4.3–4.7 →
-  **photos last**: a pause, then one stack every 0.26 s from 5.4 s in **trip order (Day N)**, leader + ring first, pile drops.
+  **photos last**: a pause, then one stack every 0.26 s from 5.4 s in **trip order (Day N)**, leader + diamond first, pile drops.
 - Plates = t0 split by layer (`PLATES` in build-tiles.mjs, same order) so they stack to exactly the t0 drawing. When
   the drawing ends, swap canvas→tiles in the **same frame** (a crossfade doubles every line). Tiles are hidden by
   `html.op-drawing` only (not `.opening`, which lasts until the photos land — that hid the map after the drawing), and
@@ -181,11 +181,24 @@ per zoom tier → shown in Leaflet with live hand-lettered labels on top.
 - Any pointer/wheel/key skips to the end. Skipped for `?f=` deep links, `still=1` and reduced motion; `?t=` holds a frame.
 - New map layer → add it to a plate in `PLATES` too, or it won't appear until the swap.
 
+## Security rules (the repo is public: github.com/choongching/afghan-field-notes)
+- **Data is never markup**: anything from `photos.json`, `map.json`, check-ins or lookups goes in via `textContent`, or
+  through `esc()` / `num()` / `safeUrl()` (photos.js) when building HTML strings. Image URLs: https or relative only.
+- **No inline scripts**: both pages have a CSP meta tag (`script-src 'self'`). Page logic lives in `js/site.js` and
+  `checkin/checkin.js`. A new external host (e.g. the R2 photo domain) must be added to the CSP `img-src`/`connect-src`,
+  or it is silently blocked — check the page still loads fonts/photos/weather after any CSP change.
+- Vendor code is self-hosted with SRI; never add a script from a CDN.
+- Never commit `~/.field-notes`, `local-r2/`, `data/raw/`, `tiles/raw/`; scan staged files for keys before pushing.
+
 ## Typical change → steps
 1. Edit the layer in `sketch-map.js` (or `wakhan.js` / `relief.js`), keep it seeded and in a tier.
-2. `node --input-type=module --check < js/map/<file>.js`
-3. Rebuild with the `map-build` skill (tiles + labels).
-4. Look at it with the `visual-check` skill at the zoom where it appears (`?f=3&at=x,y`).
+2. `node --input-type=module --check` **every** file you touched (a stray `,,` once blanked the whole page — the
+   browser only says "Unexpected token" with no file name).
+3. Rebuild with the `map-build` skill (tiles + labels) if anything under `js/map/` that's baked changed.
+4. Look at it with the `visual-check` skill at the zoom where it appears (`?f=3&at=x,y`); for load-related changes
+   also run `perf.mjs`.
+5. `npm test`, then commit and push to `main` (end the message with the `Co-Authored-By: Claude …` line). Keep
+   README.md in step when a feature or the setup changes.
 
 ## Style bench
 `spike/map-lab.html` renders `drawMap` live (no tiles) with layer toggles, ink colours, "traveller

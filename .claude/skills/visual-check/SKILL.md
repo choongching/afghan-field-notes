@@ -36,7 +36,10 @@ $S "spike/map-lab.html" /tmp/lab.png 1500x860 2 1000,700,400,900      # 2× deta
 $S "spike/wall.html?intro=0" /tmp/wall.png                           # archived photo wall
 ```
 Write screenshots to the session scratchpad rather than the repo.
-Wait **≥ 8 s**: the page has a preloader (fonts, tiles, weather). A capture with only country names, or an
+Wait **≥ 8 s**: the page has a preloader (fonts, tiles, weather). For a screenshot that must be complete (README,
+before/after), make the expression wait for every tile, and retry if the image is blank (min luminance ≥ 200):
+`(async () => { const t = [...document.querySelectorAll('.leaflet-tile')]; await Promise.all(t.map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; }))); await new Promise(r => setTimeout(r, 1500)); return 1; })()`
+At DPR 2 a capture is sometimes blank or missing one tile even though the page is fine — re-shoot before debugging. A capture with only country names, or an
 empty today note, means it was taken too early — re-run with a longer wait before debugging. Crop with PIL to
 inspect details (e.g. the today note ≈ `(900,540,1380,773)` at 1440×860).
 
