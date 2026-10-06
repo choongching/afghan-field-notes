@@ -48,17 +48,66 @@ npm run build:data   # optional: re-derive borders/rivers + elevation from the s
 
 ## How it works
 
+The map is drawn once at build time and baked into image tiles. The browser adds everything live on top.
+
+```mermaid
+flowchart TD
+    subgraph SRC["Sources"]
+        NE["Natural Earth<br/>borders · rivers · lakes"]
+        DEM["AWS Terrain Tiles<br/>elevation"]
+    end
+
+    subgraph BUILD["Build time — npm run build:data / build:tiles"]
+        DATA[("data/*.json")]
+        GEO["geo.js<br/>projection + 'drawn from memory' warp"]
+        PEN["pencil.js<br/>pressure brush · rough lines · peaks · hatching"]
+        SKETCH["sketch-map.js<br/>every layer → SVG"]
+        RENDER["build-tiles.mjs (resvg)<br/>+ slice-tiles.py"]
+    end
+
+    subgraph OUT["Generated assets — tiles/"]
+        TILES["WebP tiles per zoom tier"]
+        LABELS["map.json<br/>label text + positions"]
+        PLATES["intro/*<br/>opening plates"]
+    end
+
+    subgraph WEB["In the browser — index.html + js/site.js"]
+        LEAF["Leaflet (CRS.Simple)<br/>two-state zoom · tier fades"]
+        LIVE["live hand-lettered labels"]
+        OPEN["opening: the map draws itself"]
+        STOPS["photo stops<br/>data/photos.json"]
+        TODAY["Afghanistan, today<br/>Open-Meteo"]
+        CHECK["'I was here!' note"]
+    end
+
+    NE --> DATA
+    DEM --> DATA
+    DATA --> GEO --> SKETCH
+    PEN --> SKETCH
+    SKETCH --> RENDER
+    RENDER --> TILES & LABELS & PLATES
+    TILES --> LEAF
+    LABELS --> LIVE
+    PLATES --> OPEN
+    GEO -. same coordinates .-> STOPS
+    GEO -. same coordinates .-> CHECK
 ```
-Natural Earth + elevation grid
-        │  tools/build-map-data.py, build-elevation.py
-        ▼
-data/*.json ──► js/map/geo.js         one projection + a small "drawn from memory" warp (pins share it)
-        │      js/map/pencil.js       stroke primitives: pressure brush, rough lines, peaks, hatching
-        │      js/map/sketch-map.js   every layer: border, rivers, mountains, landmarks, labels…
-        ▼  tools/build-tiles.mjs (resvg) + slice-tiles.py
-tiles/<tier>/<z>/<x>/<y>.webp   +  tiles/map.json (labels)  +  tiles/intro/* (opening plates)
-        ▼
-index.html + js/site.js   Leaflet (CRS.Simple), live hand-lettered labels, zoom tiers, opening, photos, check-in
+
+A check-in goes from a private page, through a small receiver, to a public summary that the map picks up:
+
+```mermaid
+flowchart LR
+    PHONE["📱 checkin/<br/>place name · coordinates · Maps link"]
+    RECV["Receiver<br/>tools/dev-server.mjs today,<br/>a Cloudflare Worker later"]
+    RULES{"js/checkin/core.js<br/>validate · rate-limit · plausibility"}
+    PRIV[("Private history<br/>~/.field-notes/checkins/")]
+    PUB[("Public summary<br/>checkin/latest.json<br/>day · town-level · note")]
+    MAP["The map<br/>polls every 30 s"]
+
+    PHONE -->|"POST /api/checkin"| RECV --> RULES
+    RULES -->|"exact, kept private"| PRIV
+    RULES -->|"publicView()"| PUB
+    PUB --> MAP
 ```
 
 | Path | What it is |
@@ -99,16 +148,6 @@ in [`docs/hosting-plan.md`](docs/hosting-plan.md).
 
 ## Data and credits
 
-- Borders, rivers and lakes: [Natural Earth](https://www.naturalearthdata.com/) (public domain).
-  Some tributaries are hand-traced and approximate.
-- Elevation: [AWS Terrain Tiles](https://registry.opendata.aws/terrain-tiles/) (Mapzen; SRTM, GMTED and other sources).
-- Weather: [Open-Meteo](https://open-meteo.com/) (CC BY 4.0).
-- Check-in place search: [Nominatim](https://nominatim.org/) / © [OpenStreetMap](https://www.openstreetmap.org/copyright)
-  contributors (ODbL). Check-in preview tiles © Esri.
-- Map viewer: [Leaflet](https://leafletjs.com/). Tile rendering: [resvg](https://github.com/RazrFalcon/resvg).
-- Fonts: Architects Daughter, Reenie Beanie, Amatic SC and Inter ([Google Fonts](https://fonts.google.com/), OFL).
-- Placeholder photos: [Lorem Picsum](https://picsum.photos/). These will be replaced by the real trip photos.
-
----
-
-Built with [Claude Code](https://claude.com/claude-code).
+Built on open geographic and elevation data (Natural Earth, open terrain tiles), with weather from Open-Meteo and
+place search from OpenStreetMap contributors. Map viewer: Leaflet. Fonts from Google Fonts. Some details, like a few
+tributaries, are hand-traced and approximate. Photos are placeholders until the real trip photos are added.
