@@ -1,0 +1,7 @@
+node_modules/
+data/raw/
+tiles/raw/
+# local stand-in for the R2 public bucket (written by tools/dev-server.mjs)
+local-r2/
+.DS_Store
+*.log

@@ -1,0 +1,337 @@
+{
+ "_note": "Photo stacks pinned to the sketch map, one per place. Replace img/caption with your own photos (strip EXIF GPS before publishing). lon/lat are real; dx/dy = where the stack sits relative to the spot, in map px (frame 2000x1300). precision: exact | approx | hidden.",
+ "stacks": [
+  {
+   "id": "kabul-babur",
+   "title": "Babur's Garden",
+   "place": "Kabul",
+   "date": "Day 1",
+   "lon": 69.16,
+   "lat": 34.5,
+   "dx": 36,
+   "dy": 118,
+   "rot": 3,
+   "precision": "exact",
+   "photos": [
+    {
+     "img": "https://picsum.photos/seed/kabul-babur-0/480/360",
+     "caption": "first light over the city"
+    },
+    {
+     "img": "https://picsum.photos/seed/kabul-babur-1/480/360",
+     "caption": "market"
+    },
+    {
+     "img": "https://picsum.photos/seed/kabul-babur-2/480/360",
+     "caption": "kids waved"
+    },
+    {
+     "img": "https://picsum.photos/seed/kabul-babur-3/480/360",
+     "caption": "a long wall"
+    },
+    {
+     "img": "https://picsum.photos/seed/kabul-babur-4/480/360",
+     "caption": "dust"
+    },
+    {
+     "img": "https://picsum.photos/seed/kabul-babur-5/480/360",
+     "caption": "on the way"
+    }
+   ]
+  },
+  {
+   "id": "bamiyan-niche",
+   "title": "The empty niche",
+   "place": "Bamiyan",
+   "date": "Day 2",
+   "lon": 67.827,
+   "lat": 34.832,
+   "dx": -40,
+   "dy": -110,
+   "rot": -4,
+   "precision": "exact",
+   "photos": [
+    {
+     "img": "https://picsum.photos/seed/bamiyan-niche-0/480/360",
+     "caption": "where the Buddha stood"
+    },
+    {
+     "img": "https://picsum.photos/seed/bamiyan-niche-1/480/360",
+     "caption": "late light"
+    },
+    {
+     "img": "https://picsum.photos/seed/bamiyan-niche-2/480/360",
+     "caption": "market"
+    },
+    {
+     "img": "https://picsum.photos/seed/bamiyan-niche-3/480/360",
+     "caption": "kids waved"
+    },
+    {
+     "img": "https://picsum.photos/seed/bamiyan-niche-4/480/360",
+     "caption": "a long wall"
+    }
+   ]
+  },
+  {
+   "id": "band-e-amir",
+   "title": "Band-e Amir",
+   "place": "Band-e Amir",
+   "date": "Day 3",
+   "lon": 67.231,
+   "lat": 34.84,
+   "dx": -150,
+   "dy": 90,
+   "rot": 2,
+   "precision": "exact",
+   "photos": [
+    {
+     "img": "https://picsum.photos/seed/band-e-amir-0/480/360",
+     "caption": "that blue isn't real. it is."
+    },
+    {
+     "img": "https://picsum.photos/seed/band-e-amir-1/480/360",
+     "caption": "tea again"
+    },
+    {
+     "img": "https://picsum.photos/seed/band-e-amir-2/480/360",
+     "caption": "looking back"
+    },
+    {
+     "img": "https://picsum.photos/seed/band-e-amir-3/480/360",
+     "caption": "late light"
+    },
+    {
+     "img": "https://picsum.photos/seed/band-e-amir-4/480/360",
+     "caption": "market"
+    },
+    {
+     "img": "https://picsum.photos/seed/band-e-amir-5/480/360",
+     "caption": "kids waved"
+    },
+    {
+     "img": "https://picsum.photos/seed/band-e-amir-6/480/360",
+     "caption": "a long wall"
+    }
+   ]
+  },
+  {
+   "id": "mazar-mosque",
+   "title": "Blue Mosque",
+   "place": "Mazar-i-Sharif",
+   "date": "Day 5",
+   "lon": 67.11,
+   "lat": 36.71,
+   "dx": -130,
+   "dy": -20,
+   "rot": -2,
+   "precision": "exact",
+   "photos": [
+    {
+     "img": "https://picsum.photos/seed/mazar-mosque-0/480/360",
+     "caption": "white doves everywhere"
+    },
+    {
+     "img": "https://picsum.photos/seed/mazar-mosque-1/480/360",
+     "caption": "late light"
+    },
+    {
+     "img": "https://picsum.photos/seed/mazar-mosque-2/480/360",
+     "caption": "market"
+    },
+    {
+     "img": "https://picsum.photos/seed/mazar-mosque-3/480/360",
+     "caption": "kids waved"
+    }
+   ]
+  },
+  {
+   "id": "salang",
+   "title": "Salang Pass",
+   "place": "Salang",
+   "date": "Day 4",
+   "lon": 69.04,
+   "lat": 35.31,
+   "dx": 135,
+   "dy": 10,
+   "rot": 4,
+   "precision": "approx",
+   "photos": [
+    {
+     "img": "https://picsum.photos/seed/salang-0/480/360",
+     "caption": "snow in the tunnel"
+    },
+    {
+     "img": "https://picsum.photos/seed/salang-1/480/360",
+     "caption": "dust"
+    },
+    {
+     "img": "https://picsum.photos/seed/salang-2/480/360",
+     "caption": "on the way"
+    }
+   ]
+  },
+  {
+   "id": "herat-citadel",
+   "title": "Herat Citadel",
+   "place": "Herat",
+   "date": "Day 9",
+   "lon": 62.19,
+   "lat": 34.35,
+   "dx": 30,
+   "dy": 150,
+   "rot": -3,
+   "precision": "exact",
+   "photos": [
+    {
+     "img": "https://picsum.photos/seed/herat-citadel-0/480/360",
+     "caption": "older than it looks"
+    },
+    {
+     "img": "https://picsum.photos/seed/herat-citadel-1/480/360",
+     "caption": "kids waved"
+    },
+    {
+     "img": "https://picsum.photos/seed/herat-citadel-2/480/360",
+     "caption": "a long wall"
+    },
+    {
+     "img": "https://picsum.photos/seed/herat-citadel-3/480/360",
+     "caption": "dust"
+    },
+    {
+     "img": "https://picsum.photos/seed/herat-citadel-4/480/360",
+     "caption": "on the way"
+    }
+   ]
+  },
+  {
+   "id": "jam",
+   "title": "Minaret of Jam",
+   "place": "Ghor",
+   "date": "Day 8",
+   "lon": 64.516,
+   "lat": 34.397,
+   "dx": 20,
+   "dy": 150,
+   "rot": 3,
+   "precision": "exact",
+   "photos": [
+    {
+     "img": "https://picsum.photos/seed/jam-0/480/360",
+     "caption": "65 m, in the middle of nowhere"
+    },
+    {
+     "img": "https://picsum.photos/seed/jam-1/480/360",
+     "caption": "late light"
+    },
+    {
+     "img": "https://picsum.photos/seed/jam-2/480/360",
+     "caption": "market"
+    }
+   ]
+  },
+  {
+   "id": "wakhan-sarhad",
+   "title": "Sarhad-e Broghil",
+   "place": "Wakhan",
+   "date": "Day 12",
+   "lon": 73.35,
+   "lat": 36.97,
+   "dx": 40,
+   "dy": 120,
+   "rot": -3,
+   "precision": "approx",
+   "photos": [
+    {
+     "img": "https://picsum.photos/seed/wakhan-sarhad-0/480/360",
+     "caption": "the road ends here"
+    },
+    {
+     "img": "https://picsum.photos/seed/wakhan-sarhad-1/480/360",
+     "caption": "market"
+    },
+    {
+     "img": "https://picsum.photos/seed/wakhan-sarhad-2/480/360",
+     "caption": "kids waved"
+    },
+    {
+     "img": "https://picsum.photos/seed/wakhan-sarhad-3/480/360",
+     "caption": "a long wall"
+    },
+    {
+     "img": "https://picsum.photos/seed/wakhan-sarhad-4/480/360",
+     "caption": "dust"
+    },
+    {
+     "img": "https://picsum.photos/seed/wakhan-sarhad-5/480/360",
+     "caption": "on the way"
+    }
+   ]
+  },
+  {
+   "id": "little-pamir",
+   "title": "Little Pamir",
+   "place": "Wakhan",
+   "date": "Day 14",
+   "lon": 74.1,
+   "lat": 37.25,
+   "dx": 60,
+   "dy": -110,
+   "rot": 4,
+   "precision": "approx",
+   "photos": [
+    {
+     "img": "https://picsum.photos/seed/little-pamir-0/480/360",
+     "caption": "yaks, yurts, no signal"
+    },
+    {
+     "img": "https://picsum.photos/seed/little-pamir-1/480/360",
+     "caption": "on the way"
+    },
+    {
+     "img": "https://picsum.photos/seed/little-pamir-2/480/360",
+     "caption": "the driver, Aziz"
+    },
+    {
+     "img": "https://picsum.photos/seed/little-pamir-3/480/360",
+     "caption": "tea again"
+    },
+    {
+     "img": "https://picsum.photos/seed/little-pamir-4/480/360",
+     "caption": "looking back"
+    }
+   ]
+  },
+  {
+   "id": "kandahar",
+   "title": "Kandahar bazaar",
+   "place": "Kandahar",
+   "date": "Day 17",
+   "lon": 65.71,
+   "lat": 31.61,
+   "dx": 130,
+   "dy": 80,
+   "rot": -2,
+   "precision": "approx",
+   "photos": [
+    {
+     "img": "https://picsum.photos/seed/kandahar-0/480/360",
+     "caption": "pomegranates, piled high"
+    },
+    {
+     "img": "https://picsum.photos/seed/kandahar-1/480/360",
+     "caption": "on the way"
+    },
+    {
+     "img": "https://picsum.photos/seed/kandahar-2/480/360",
+     "caption": "the driver, Aziz"
+    },
+    {
+     "img": "https://picsum.photos/seed/kandahar-3/480/360",
+     "caption": "tea again"
+    }
+   ]
+  }
+ ]
+}

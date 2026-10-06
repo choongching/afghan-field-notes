@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Afghanistan Terrain Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f4f2ec; --ink: #25262a; --muted: #6b6a66; --line: #d9d5cb; --accent: #b3452f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 Inter, system-ui, sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 40px 20px 80px; }
+  h1 { font: 600 38px/1.1 Fraunces, serif; margin: 0 0 6px; letter-spacing: -.01em; }
+  h2 { font: 600 22px/1.2 Fraunces, serif; margin: 48px 0 6px; }
+  .lede { color: var(--muted); max-width: 720px; margin: 0 0 24px; }
+  figure { margin: 0; }
+  figcaption { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .map-wrap { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  canvas { display: block; width: 100%; height: auto; }
+  .toggles { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+  .toggles label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+  .card h3 { margin: 0 0 2px; font-size: 15px; font-weight: 600; }
+  .card p { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
+  .bands { display: grid; gap: 5px; }
+  .band { display: grid; grid-template-columns: 110px 1fr 52px; align-items: center; gap: 10px; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .band i { display: block; height: 14px; border-radius: 3px; }
+  .band span:last-child { text-align: right; color: var(--muted); }
+  svg.profile { width: 100%; height: 170px; display: block; }
+  svg.profile text { font: 11px Inter, sans-serif; fill: var(--muted); }
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .notes .card h3 { font-family: Fraunces, serif; font-size: 17px; }
+  .notes .card p { font-size: 14px; color: var(--ink); }
+  .src { font-size: 12px; color: var(--muted); margin-top: 40px; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1b1b1d; --ink: #e9e7e2; --muted: #a09d97; --line: #34343a; } :root:not([data-theme="light"]) .card, :root:not([data-theme="light"]) .map-wrap { background: #232326; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Afghanistan terrain study</h1>
+  <p class="lede">Real elevation data behind the sketch map: where the high ground is, how the country steps down from the Pamirs to the Sistan basin, and what that means for how a traveller would draw it.</p>
+
+  <figure>
+    <div class="map-wrap"><canvas id="relief"></canvas></div>
+    <div class="toggles" id="toggles">
+      <label><input type="checkbox" name="tint" checked> Elevation tint</label>
+      <label><input type="checkbox" name="shade" checked> Hillshade</label>
+      <label><input type="checkbox" name="contours" checked> Contours (1,000 m)</label>
+      <label><input type="checkbox" name="border" checked> Border</label>
+      <label><input type="checkbox" name="peaks" checked> Peaks &gt; 5,500 m</label>
+      <label><input type="checkbox" name="sections" checked> Section lines</label>
+    </div>
+    <figcaption>Shaded relief from AWS Terrain Tiles (zoom 7, ~2.5 km cells), light from the north-west. Summits read ~300 m low at this resolution (Noshaq: 7,181 m in the grid vs 7,492 m surveyed).</figcaption>
+  </figure>
+
+  <h2>How high is the country?</h2>
+  <div class="grid">
+    <div class="card"><h3>Share of land area by elevation</h3><p>Cells inside the border, area-weighted.</p><div class="bands" id="bands"></div></div>
+    <div class="card"><h3>Check against known elevations</h3><p>Grid value vs. commonly cited figure.</p><div class="bands" id="checks"></div></div>
+  </div>
+
+  <h2>Cross-sections</h2>
+  <div class="grid" id="sections"></div>
+
+  <h2>What this means for the drawing</h2>
+  <div class="notes" id="notes"></div>
+
+  <p class="src">Elevation: AWS Terrain Tiles / Mapzen terrarium (public). Border, rivers: Natural Earth 10m (public domain). Built with tools/build-elevation.py and tools/build-map-data.py.</p>
+</main>
+
+<script type="module">
+  import { loadTerrain } from '../js/map/terrain.js';
+  const T = await loadTerrain('../data/afg-elevation.json');
+  const geo = await (await fetch('../data/afghanistan.json')).json();
+  const [lon0, lat0, lon1, lat1] = T.bounds;
+
+  // ---- relief canvas (equirectangular, cos-corrected width) ----
+  const c = Math.cos((34 * Math.PI) / 180), SC = 2;
+  const W = Math.round(T.w * c * SC), H = T.h * SC;
+  const cv = document.getElementById('relief'); cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  const X = (lon) => ((lon - lon0) / (lon1 - lon0)) * W, Y = (lat) => ((lat1 - lat) / (lat1 - lat0)) * H;
+
+  // hypsometric tint: warm lowland → sand → olive → grey rock → snow
+  const STOPS = [[0, [196, 205, 170]], [600, [222, 214, 170]], [1200, [214, 190, 150]], [2000, [186, 160, 128]], [3000, [160, 142, 124]], [4000, [170, 166, 162]], [5000, [226, 228, 232]], [7000, [255, 255, 255]]];
+  const tint = (e) => { for (let i = 1; i < STOPS.length; i++) if (e <= STOPS[i][0]) { const [a, ca] = STOPS[i - 1], [b, cb] = STOPS[i], t = (e - a) / (b - a); return ca.map((v, j) => v + (cb[j] - v) * t); } return STOPS.at(-1)[1]; };
+
+  // border mask (for stats + dimming outside)
+  const mask = document.createElement('canvas'); mask.width = T.w; mask.height = T.h;
+  const mctx = mask.getContext('2d');
+  mctx.beginPath();
+  for (const ring of geo.afghanistan) ring.forEach(([lon, lat], i) => { const [gx, gy] = T.toGrid(lon, lat); i ? mctx.lineTo(gx + 0.5, gy + 0.5) : mctx.moveTo(gx + 0.5, gy + 0.5); });
+  mctx.fill();
+  const inside = mctx.getImageData(0, 0, T.w, T.h).data;
+  const isIn = (i, k) => inside[(k * T.w + i) * 4 + 3] > 127;
+
+  const base = document.createElement('canvas'); base.width = T.w; base.height = T.h;
+  function paintBase(opts) {
+    const bctx = base.getContext('2d'), img = bctx.createImageData(T.w, T.h);
+    for (let k = 0; k < T.h; k++) for (let i = 0; i < T.w; i++) {
+      const e = T.at(i, k), p = (k * T.w + i) * 4;
+      let rgb = opts.tint ? tint(e) : [236, 234, 228];
+      if (opts.shade) { const s = T.shade(Math.max(1, Math.min(T.w - 2, i)), Math.max(1, Math.min(T.h - 2, k)), 315, 40, 2.2); rgb = rgb.map((v) => v * (0.45 + 0.75 * s)); }
+      if (!isIn(i, k)) rgb = rgb.map((v) => v * 0.55 + 255 * 0.45);
+      img.data.set([...rgb.map((v) => Math.max(0, Math.min(255, v))), 255], p);
+    }
+    bctx.putImageData(img, 0, 0);
+  }
+
+  const SECTIONS = [
+    { id: 'A', name: 'Across the Wakhan', sub: 'North → south at 73°E: Pamir, valley, Hindu Kush wall', a: [73.0, 37.9], b: [73.0, 36.3] },
+    { id: 'B', name: 'Along the Wakhan', sub: 'West → east valley floor: Ishkashim → Sarhad → Little Pamir', pts: [[71.6, 36.72], [72.3, 37.02], [72.9, 37.0], [73.35, 36.97], [73.9, 37.25], [74.6, 37.3]] },
+    { id: 'C', name: 'Kabul → Bamiyan → Band-e Amir', sub: 'The classic central-highlands road (via the Shibar side)', pts: [[69.18, 34.53], [68.8, 34.72], [68.2, 34.85], [67.83, 34.82], [67.2, 34.84]] },
+    { id: 'D', name: 'Herat → Kabul, straight across', sub: 'West → east at ~34.5°N: the central highlands as a wall', a: [62.2, 34.35], b: [69.18, 34.53] },
+  ];
+
+  let peakList = T.peaks({ radius: 10, minElev: 5500 }).filter((p) => { const [gx, gy] = T.toGrid(...p.at); return isIn(Math.round(gx), Math.round(gy)); });
+
+  function draw() {
+    const opts = Object.fromEntries([...document.querySelectorAll('#toggles input')].map((i) => [i.name, i.checked]));
+    paintBase(opts);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(base, 0, 0, W, H);
+    ctx.lineJoin = 'round';
+    if (opts.contours) {
+      for (let lv = 1000; lv <= 6000; lv += 1000) {
+        ctx.strokeStyle = `rgba(60,45,30,${lv % 2000 ? 0.28 : 0.45})`; ctx.lineWidth = lv % 2000 ? 0.8 : 1.2;
+        for (const line of T.contours(lv)) { if (line.length < 6) continue; ctx.beginPath(); line.forEach(([lon, lat], i) => i ? ctx.lineTo(X(lon), Y(lat)) : ctx.moveTo(X(lon), Y(lat))); ctx.stroke(); }
+      }
+    }
+    if (opts.border) {
+      ctx.strokeStyle = '#25262a'; ctx.lineWidth = 2; ctx.setLineDash([8, 4, 2, 4]);
+      for (const ring of geo.afghanistan) { ctx.beginPath(); ring.forEach(([lon, lat], i) => i ? ctx.lineTo(X(lon), Y(lat)) : ctx.moveTo(X(lon), Y(lat))); ctx.closePath(); ctx.stroke(); }
+      ctx.setLineDash([]);
+    }
+    ctx.font = '600 20px Inter, sans-serif';
+    if (opts.peaks) for (const p of peakList.slice(0, 10)) {
+      const x = X(p.at[0]), y = Y(p.at[1]);
+      ctx.fillStyle = '#b3452f'; ctx.beginPath(); ctx.moveTo(x, y - 9); ctx.lineTo(x + 8, y + 6); ctx.lineTo(x - 8, y + 6); ctx.fill();
+      ctx.fillStyle = '#25262a'; ctx.fillText(`${Math.round(p.elev).toLocaleString()} m`, x + 12, y + 6);
+    }
+    if (opts.sections) for (const s of SECTIONS) {
+      const pts = s.pts || [s.a, s.b];
+      ctx.strokeStyle = '#1d4e89'; ctx.lineWidth = 3; ctx.beginPath(); pts.forEach(([lon, lat], i) => i ? ctx.lineTo(X(lon), Y(lat)) : ctx.moveTo(X(lon), Y(lat))); ctx.stroke();
+      const [lx, ly] = pts[0]; ctx.fillStyle = '#1d4e89'; ctx.font = '700 24px Inter, sans-serif'; ctx.fillText(s.id, X(lx) - 26, Y(ly) + 8);
+    }
+  }
+  document.getElementById('toggles').addEventListener('change', draw);
+  draw();
+
+  // ---- elevation bands (area-weighted by cos(lat)) ----
+  const BANDS = [[0, 500], [500, 1000], [1000, 1500], [1500, 2000], [2000, 3000], [3000, 4000], [4000, 5000], [5000, 9000]];
+  const acc = BANDS.map(() => 0); let total = 0;
+  for (let k = 0; k < T.h; k++) { const wgt = Math.cos((T.toLL(0, k)[1] * Math.PI) / 180); for (let i = 0; i < T.w; i++) if (isIn(i, k)) { const e = T.at(i, k); const b = BANDS.findIndex(([a, z]) => e >= a && e < z); if (b >= 0) { acc[b] += wgt; total += wgt; } } }
+  const max = Math.max(...acc);
+  document.getElementById('bands').innerHTML = BANDS.map(([a, z], i) => `<div class="band"><span>${a.toLocaleString()}–${z === 9000 ? '' : z.toLocaleString()} m</span><i style="width:${(acc[i] / max) * 100}%;background:rgb(${tint((a + Math.min(z, 6000)) / 2).map(Math.round).join(',')})"></i><span>${((acc[i] / total) * 100).toFixed(0)}%</span></div>`).join('');
+  const CHECK = [['Kabul', 69.18, 34.53, 1791], ['Bamiyan', 67.83, 34.82, 2550], ['Herat', 62.2, 34.35, 920], ['Kandahar', 65.71, 31.61, 1010], ['Sarhad-e Broghil', 73.35, 36.97, 3300], ['Noshaq (summit)', 71.84, 36.44, 7492]];
+  document.getElementById('checks').innerHTML = CHECK.map(([n, lon, lat, ref]) => `<div class="band"><span>${n}</span><span>${Math.round(T.sample(lon, lat)).toLocaleString()} m</span><span>${ref.toLocaleString()}</span></div>`).join('');
+
+  // ---- cross-sections ----
+  const secHost = document.getElementById('sections');
+  for (const s of SECTIONS) {
+    let prof;
+    if (s.pts) { prof = []; for (let i = 0; i < s.pts.length - 1; i++) prof.push(...T.profile(s.pts[i], s.pts[i + 1], 60).slice(i ? 1 : 0)); prof = prof.map((p, i) => ({ ...p, u: i / (prof.length - 1) })); }
+    else prof = T.profile(s.a, s.b, 200);
+    const km = (s.pts || [s.a, s.b]).reduce((d, p, i, arr) => i ? d + Math.hypot((p[0] - arr[i - 1][0]) * 111 * c, (p[1] - arr[i - 1][1]) * 111) : 0, 0);
+    const top = 7500, w = 520, h = 150;
+    const px = (u) => 34 + u * (w - 44), py = (e) => 10 + (1 - e / top) * (h - 30);
+    const path = prof.map((p, i) => `${i ? 'L' : 'M'}${px(p.u).toFixed(1)} ${py(p.elev).toFixed(1)}`).join('');
+    const hi = prof.reduce((a, b) => (b.elev > a.elev ? b : a)), lo = prof.reduce((a, b) => (b.elev < a.elev ? b : a));
+    secHost.insertAdjacentHTML('beforeend', `<div class="card"><h3>${s.id} · ${s.name}</h3><p>${s.sub} · ~${Math.round(km)} km</p>
+      <svg class="profile" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+        ${[0, 2000, 4000, 6000].map((e) => `<line x1="34" x2="${w - 10}" y1="${py(e)}" y2="${py(e)}" stroke="currentColor" stroke-opacity=".12"/><text x="0" y="${py(e) + 4}">${e / 1000}k</text>`).join('')}
+        <path d="${path} L${px(1)} ${py(0)} L${px(0)} ${py(0)} Z" fill="#b8a58a" fill-opacity=".35"/>
+        <path d="${path}" fill="none" stroke="#6b5438" stroke-width="1.6"/>
+        <circle cx="${px(hi.u)}" cy="${py(hi.elev)}" r="3" fill="#b3452f"/><text x="${px(hi.u) + 6}" y="${py(hi.elev) + 4}">${Math.round(hi.elev).toLocaleString()} m</text>
+        <circle cx="${px(lo.u)}" cy="${py(lo.elev)}" r="3" fill="#1d4e89"/><text x="${px(lo.u) + 6}" y="${py(lo.elev) - 6}">${Math.round(lo.elev).toLocaleString()} m</text>
+      </svg></div>`);
+  }
+
+  // ---- drawing implications ----
+  const NOTES = [
+    ['Draw the north-east heavy', 'The Hindu Kush and Pamirs hold nearly all ground over 4,000 m. That is where the darkest hatching, the tallest peaks and the snow belong; everywhere else should feel lighter.'],
+    ['The Wakhan is a trench, not a strip', 'Section A: ~4,500 m Pamir to the north, a valley floor near 3,000 m, then a wall climbing past 6,000 m to the south within ~40 km. Draw two facing ranges with a thin river between, and hatch the south wall hardest.'],
+    ['The centre is a plateau with a ridge', 'Section D: the central highlands rise steadily from Herat (~900 m) to a 3,000 m+ spine (Koh-i-Baba) then drop to Kabul. Rolling hills with flicks, one crested ridge — not a field of spikes.'],
+    ['The south-west is nearly empty', 'Most ground under 1,000 m is the Helmand/Sistan basin and the Registan: flat, dry, stippled. Leave white space there; it balances the heavy north-east.'],
+    ['Valleys carry the story', 'Kabul, Bamiyan, Jalalabad and the Wakhan all sit in valleys between ridges. Put landmarks and route notes in valleys and let ridges frame them.'],
+    ['Hatch by aspect, light from the north-west', 'With the light from the NW, south- and east-facing slopes go into shadow. Use the grid to decide which face of each ridge gets hatching, so the whole sheet shares one light.'],
+  ];
+  document.getElementById('notes').innerHTML = NOTES.map(([h, p]) => `<div class="card"><h3>${h}</h3><p>${p}</p></div>`).join('');
+</script>
+</body>
+</html>

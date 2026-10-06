@@ -1,0 +1,51 @@
+/* Opening scene overlays. The room is dark on first paint only when the intro
+   will play (html.intro is set by an inline script before render). */
+
+.lights {
+  position: fixed; inset: 0; z-index: 1001; pointer-events: none;
+  background: rgb(12 13 16);
+  opacity: 0;
+}
+html.intro .lights { opacity: 1; }
+
+/* auto-exposure: the camera meter overshoots for a beat when the light comes on */
+.exposure {
+  position: fixed; inset: 0; z-index: 1002; pointer-events: none;
+  background: #fff; mix-blend-mode: soft-light; opacity: 0;
+}
+
+/* while filming: drop the stage blur (it would be re-filtered every frame) */
+html.filming .stage { filter: none; }
+
+.cue {
+  position: fixed; left: 50%; bottom: 22px; z-index: 1003; margin: 0;
+  transform: translateX(-50%) rotate(-1.5deg);
+  font: 26px/1 "Reenie Beanie", cursive; color: rgb(30 32 40 / .75);
+  pointer-events: none; opacity: 0; white-space: nowrap;
+}
+
+.replay {
+  position: fixed; left: 16px; bottom: 16px; z-index: 1003;
+  font: 600 12px/1 Inter, system-ui, sans-serif; letter-spacing: .02em;
+  color: #2b2d33; background: rgb(255 255 255 / .7);
+  border: 1px solid rgb(0 0 0 / .12); border-radius: 999px; padding: 8px 12px;
+  cursor: pointer; backdrop-filter: blur(6px);
+}
+.replay:hover { background: #fff; }
+.replay:focus-visible { outline: 2px solid #2b2d33; outline-offset: 2px; }
+
+/* follow-through: a draft from the camera stepping back lifts a few notes */
+@keyframes draft {
+  0%   { transform: perspective(520px) rotateX(var(--curl, 7deg)); }
+  35%  { transform: perspective(520px) rotateX(calc(var(--curl, 7deg) * 2.1)); }
+  70%  { transform: perspective(520px) rotateX(calc(var(--curl, 7deg) * .8)); }
+  100% { transform: perspective(520px) rotateX(var(--curl, 7deg)); }
+}
+.note.draft .note-paper { animation: draft 1.1s cubic-bezier(.3,.6,.3,1) both; }
+
+/* close-ups */
+.sheet { cursor: zoom-in; }
+.sheet.is-focus { cursor: zoom-out; }
+html.focused .viewport { cursor: zoom-out; }
+.sheet:focus { outline: none; }
+.sheet:focus-visible .paper { box-shadow: 0 0 0 2px rgb(40 44 52 / .55); }

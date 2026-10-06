@@ -1,0 +1,14 @@
+{
+  "name": "field-notes-afghanistan",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/geo.test.mjs && node tests/checkin.test.mjs",
+    "build:data": "python3 tools/build-map-data.py && python3 tools/build-elevation.py",
+    "build:tiles": "node tools/build-tiles.mjs && python3 tools/slice-tiles.py",
+    "dev": "node tools/dev-server.mjs"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2"
+  }
+}

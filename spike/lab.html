@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Realism Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&family=Nanum+Pen+Script&family=Caveat:wght@500&family=Permanent+Marker&family=Gochi+Hand&family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/materials.css">
+<link rel="stylesheet" href="../css/layouts.css">
+<style>
+  html, body { margin: 0; background: #1b1c1e; color: #ddd; font: 13px/1.4 Inter, system-ui, sans-serif; }
+  .bench { display: grid; grid-template-columns: 1fr 280px; min-height: 100vh; }
+  .view { position: relative; overflow: hidden; }
+  .stage { position: absolute; left: 0; top: 0; width: 900px; height: 600px; transform-origin: 0 0; isolation: isolate; }
+  .panel { padding: 18px; background: #232427; border-left: 1px solid #333; overflow: auto; }
+  .panel h1 { font-size: 15px; margin: 0 0 4px; }
+  .panel p { color: #999; margin: 0 0 16px; }
+  .panel label { display: grid; grid-template-columns: 1fr 44px; gap: 2px 8px; margin: 10px 0; }
+  .panel input[type=range] { grid-column: 1 / -1; width: 100%; }
+  .panel .toggle { display: flex; gap: 8px; align-items: center; margin: 6px 0; }
+  .panel fieldset { border: 1px solid #3a3b3f; border-radius: 6px; margin: 0 0 14px; padding: 6px 12px 10px; }
+  .panel legend { color: #aaa; padding: 0 4px; }
+  output { text-align: right; color: #bbb; font-variant-numeric: tabular-nums; }
+  .flat .shadow, .flat .paper-shade, .flat .note-shade, .flat .tape i { opacity: 0 !important; }
+  .flat .tape i { opacity: 1 !important; background: var(--tape); }
+  .flat .ink { filter: none; }
+  @media (max-width: 800px) { .bench { grid-template-columns: 1fr; } .view { height: 70vh; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="ink-rough" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="8" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="1.4" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<div class="bench">
+  <div class="view" id="view"><div class="stage" id="stage"><div class="wall"></div><div class="falloff"></div></div></div>
+  <form class="panel" id="panel">
+    <h1>Realism lab</h1>
+    <p>One point light casts every shadow. Toggle layers to see what each contributes.</p>
+    <fieldset><legend>Light</legend>
+      <label>Light X <output></output><input type="range" name="lx" min="-800" max="1800" value="380"></label>
+      <label>Light Y (neg = above) <output></output><input type="range" name="ly" min="-2000" max="600" value="-1100"></label>
+      <label>Distance from wall <output></output><input type="range" name="lz" min="300" max="4000" value="2100"></label>
+      <label>Softness (area light) <output></output><input type="range" name="size" min="0.2" max="2.5" step="0.05" value="0.9"></label>
+      <label>Shadow strength <output></output><input type="range" name="strength" min="0" max="2" step="0.05" value="1"></label>
+    </fieldset>
+    <fieldset><legend>Objects</legend>
+      <label>Sheet lift (bottom) <output></output><input type="range" name="sheetLift" min="0" max="30" step="0.5" value="6"></label>
+      <label>Note lift (bottom) <output></output><input type="range" name="noteLift" min="0" max="40" step="0.5" value="13"></label>
+      <label>Note curl <output></output><input type="range" name="curl" min="0" max="25" step="0.5" value="7"></label>
+    </fieldset>
+    <fieldset><legend>Layers</legend>
+      <label>Wall bump <output></output><input type="range" name="bump" min="0" max="1.5" step="0.05" value="0.45"></label>
+      <label>Wall mottle <output></output><input type="range" name="mottle" min="0" max="1" step="0.02" value="0.22"></label>
+      <label>Light falloff <output></output><input type="range" name="falloff" min="0" max="1" step="0.05" value="1"></label>
+      <label>Grain <output></output><input type="range" name="grain" min="0" max="0.4" step="0.01" value="0.09"></label>
+      <label>Vignette <output></output><input type="range" name="vignette" min="0" max="1" step="0.05" value="0.55"></label>
+      <label>Paper grain <output></output><input type="range" name="pgrain" min="0" max="2" step="0.05" value="1"></label>
+    </fieldset>
+    <div class="toggle"><input type="checkbox" id="flat" name="flat"><label for="flat" style="display:inline;margin:0">Flat mode (all realism off)</label></div>
+  </form>
+</div>
+<div class="vignette"></div>
+<div class="grain"></div>
+
+<script type="module">
+  import { installTextures } from '../js/textures.js';
+  import { sheet, note, plate, tape, applyLight, interact, light } from '../js/engine.js';
+  import { layouts } from '../js/layouts.js';
+
+  installTextures(document.documentElement, { w: 900, h: 600 });
+  const stage = document.getElementById('stage');
+  const falloff = stage.querySelector('.falloff');
+
+  const items = [
+    sheet({ x: 90, y: 70, w: 300, h: 390, rot: -0.6, content: layouts.feature({ seed: 'lab-a', kicker: 'Day 02', title: 'The Old Harbour', dek: 'Fog until noon, then everything turned gold.' }) }),
+    sheet({ x: 440, y: 90, w: 270, h: 350, rot: 0.8, tape: 'corners', content: layouts.cover({ seed: 'lab-b', title: 'Field<br>Notes', sub: 'Vol. 01 — The Trip' }) }),
+    note({ x: 300, y: 40, rot: 5, text: 'crop\ntighter?', font: 'reenie' }),
+    note({ x: 640, y: 330, w: 140, h: 140, rot: -4, text: 'love this\nlight :)', font: 'nanum', color: 'lemon' }),
+    note({ x: 60, y: 440, w: 130, h: 130, rot: 3, text: '' }),
+    plate({ x: 780, y: 420 }),
+  ];
+  for (const el of items) {
+    stage.insertBefore(el, falloff);
+    for (const t of el._tapes || []) stage.insertBefore(tape(t), falloff);
+  }
+
+  const fit = () => {
+    const v = document.getElementById('view');
+    const s = Math.min(v.clientWidth / 900, v.clientHeight / 600);
+    stage.style.transform = `scale(${s})`;
+  };
+  addEventListener('resize', fit); fit();
+  interact(items);
+
+  const panel = document.getElementById('panel');
+  const root = document.documentElement.style;
+  const update = () => {
+    const f = Object.fromEntries(new FormData(panel));
+    for (const l of panel.querySelectorAll('label')) { const i = l.querySelector('input[type=range]'); if (i) l.querySelector('output').value = i.value; }
+    const flat = !!f.flat;
+    Object.assign(light, { x: +f.lx, y: +f.ly, z: +f.lz, size: +f.size, strength: flat ? 0 : +f.strength });
+    root.setProperty('--bump-o', flat ? 0 : f.bump);
+    root.setProperty('--mottle-o', flat ? 0 : f.mottle);
+    root.setProperty('--falloff-o', flat ? 0 : f.falloff);
+    root.setProperty('--grain-o', flat ? 0 : f.grain);
+    root.setProperty('--vignette-o', flat ? 0 : f.vignette);
+    root.setProperty('--paper-grain-o', flat ? 0 : f.pgrain);
+    document.body.classList.toggle('flat', flat);
+    for (const el of items) {
+      if (el.classList.contains('sheet')) el.dataset.lift = f.sheetLift;
+      if (el.classList.contains('note')) { el.dataset.lift = f.noteLift; el.style.setProperty('--curl', `${flat ? 0 : f.curl}deg`); }
+    }
+    applyLight(items);
+  };
+  panel.addEventListener('input', update); update();
+</script>
+</body>
+</html>

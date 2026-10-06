@@ -1,0 +1,1259 @@
+{
+ "seed": "marco",
+ "frame": {
+  "w": 2000,
+  "h": 1300
+ },
+ "tiers": [
+  {
+   "id": "t0",
+   "name": "sketch",
+   "reveal": [
+    0,
+    0
+   ],
+   "native": [
+    -1,
+    2
+   ],
+   "layers": [
+    "surround",
+    "deserts",
+    "erased",
+    "border",
+    "oases",
+    "rivers",
+    "foothills",
+    "mountains",
+    "highlands",
+    "hills",
+    "landmarks",
+    "trip",
+    "places",
+    "labels",
+    "compass",
+    "scale"
+   ]
+  },
+  {
+   "id": "t1",
+   "name": "relief",
+   "reveal": [
+    1.3,
+    1.7
+   ],
+   "native": [
+    0,
+    2
+   ],
+   "layers": [
+    "terrain"
+   ]
+  },
+  {
+   "id": "t2",
+   "name": "detail",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "native": [
+    1,
+    2
+   ],
+   "layers": [
+    "towns",
+    "waters",
+    "wakhan"
+   ]
+  },
+  {
+   "id": "t3",
+   "name": "margins",
+   "reveal": [
+    2.3,
+    2.7
+   ],
+   "native": [
+    1,
+    2
+   ],
+   "layers": [
+    "notes",
+    "traveller"
+   ]
+  }
+ ],
+ "labels": [
+  {
+   "text": "Kunduz",
+   "x": 1049,
+   "y": 411,
+   "rot": -64.5,
+   "cls": "t-river",
+   "anchor": "middle",
+   "layer": "waters",
+   "reveal": [
+    1.5,
+    1.9
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Balkh",
+   "x": 904,
+   "y": 422,
+   "rot": 79.5,
+   "cls": "t-river",
+   "anchor": "middle",
+   "layer": "waters",
+   "reveal": [
+    1.5,
+    1.9
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Kokcha",
+   "x": 1249,
+   "y": 288,
+   "rot": 41.9,
+   "cls": "t-river",
+   "anchor": "middle",
+   "layer": "waters",
+   "reveal": [
+    1.5,
+    1.9
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Kunar",
+   "x": 1312,
+   "y": 503,
+   "rot": -55.8,
+   "cls": "t-river",
+   "anchor": "middle",
+   "layer": "waters",
+   "reveal": [
+    1.5,
+    1.9
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Panjshir",
+   "x": 1171,
+   "y": 472,
+   "rot": -38.8,
+   "cls": "t-river",
+   "anchor": "middle",
+   "layer": "waters",
+   "reveal": [
+    1.5,
+    1.9
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Logar",
+   "x": 1105,
+   "y": 630,
+   "rot": -58.9,
+   "cls": "t-river",
+   "anchor": "middle",
+   "layer": "waters",
+   "reveal": [
+    1.5,
+    1.9
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Murghab",
+   "x": 652,
+   "y": 524,
+   "rot": 19.8,
+   "cls": "t-river",
+   "anchor": "middle",
+   "layer": "waters",
+   "reveal": [
+    1.5,
+    1.9
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Khash Rud",
+   "x": 590,
+   "y": 822,
+   "rot": -47,
+   "cls": "t-river",
+   "anchor": "middle",
+   "layer": "waters",
+   "reveal": [
+    1.5,
+    1.9
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Tarnak",
+   "x": 907,
+   "y": 829,
+   "rot": -35.8,
+   "cls": "t-river",
+   "anchor": "middle",
+   "layer": "waters",
+   "reveal": [
+    1.5,
+    1.9
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Farah",
+   "x": 515,
+   "y": 806,
+   "rot": -47.3,
+   "cls": "t-river",
+   "anchor": "middle",
+   "layer": "waters",
+   "reveal": [
+    1.5,
+    1.9
+   ],
+   "priority": 5
+  },
+  {
+   "text": "the Buddhas (gone)",
+   "x": 993.8,
+   "y": 548.1,
+   "rot": 0.5,
+   "cls": "t-landmark",
+   "anchor": "start",
+   "layer": "landmarks",
+   "reveal": [
+    1.2,
+    1.5
+   ],
+   "priority": 4
+  },
+  {
+   "text": "Minaret of Jam",
+   "x": 629.9,
+   "y": 636,
+   "rot": 2.2,
+   "cls": "t-landmark",
+   "anchor": "start",
+   "layer": "landmarks",
+   "reveal": [
+    1.2,
+    1.5
+   ],
+   "priority": 4
+  },
+  {
+   "text": "citadel",
+   "x": 442.2,
+   "y": 616.7,
+   "rot": 1.5,
+   "cls": "t-landmark",
+   "anchor": "start",
+   "layer": "landmarks",
+   "reveal": [
+    1.2,
+    1.5
+   ],
+   "priority": 4
+  },
+  {
+   "text": "Blue Mosque",
+   "x": 892.1,
+   "y": 304.5,
+   "rot": 1.7,
+   "cls": "t-landmark",
+   "anchor": "start",
+   "layer": "landmarks",
+   "reveal": [
+    1.2,
+    1.5
+   ],
+   "priority": 4
+  },
+  {
+   "text": "KABUL",
+   "x": 1133.4,
+   "y": 574.1,
+   "rot": -1.6,
+   "cls": "t-place t-place--big",
+   "anchor": "start",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 0
+  },
+  {
+   "text": "HERAT",
+   "x": 498.6,
+   "y": 630.2,
+   "rot": 1,
+   "cls": "t-place",
+   "anchor": "start",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 1
+  },
+  {
+   "text": "MAZAR-I SHARIF",
+   "x": 925.2,
+   "y": 325.4,
+   "rot": -2.8,
+   "cls": "t-place",
+   "anchor": "start",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 1
+  },
+  {
+   "text": "KANDAHAR",
+   "x": 815.1,
+   "y": 916.2,
+   "rot": 0.9,
+   "cls": "t-place",
+   "anchor": "start",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 1
+  },
+  {
+   "text": "BAMIYAN",
+   "x": 983.2,
+   "y": 565.8,
+   "rot": 2.5,
+   "cls": "t-place",
+   "anchor": "middle",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 1
+  },
+  {
+   "text": "Band-e Amir",
+   "x": 891.8,
+   "y": 525.2,
+   "rot": 0.4,
+   "cls": "t-place t-place--small",
+   "anchor": "start",
+   "layer": "labels",
+   "reveal": [
+    1.2,
+    1.5
+   ],
+   "priority": 4
+  },
+  {
+   "text": "JALALABAD",
+   "x": 1257.9,
+   "y": 580.1,
+   "rot": 0.8,
+   "cls": "t-place",
+   "anchor": "start",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 1
+  },
+  {
+   "text": "FAIZABAD",
+   "x": 1263.9,
+   "y": 268,
+   "rot": -0.6,
+   "cls": "t-place",
+   "anchor": "start",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 1
+  },
+  {
+   "text": "HINDU KUSH",
+   "x": 1032,
+   "y": 508,
+   "rot": -28.7,
+   "cls": "t-region t-region--range t-squeeze",
+   "anchor": "start",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "hide": [
+    1.8,
+    2.2
+   ],
+   "priority": 1
+  },
+  {
+   "text": "WAKHAN CORRIDOR",
+   "x": 1400.4,
+   "y": 237.1,
+   "rot": -4.3,
+   "cls": "t-region t-region--wakhan",
+   "anchor": "start",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "hide": [
+    1.7,
+    2
+   ],
+   "priority": 1
+  },
+  {
+   "text": "Registan desert",
+   "x": 683.2,
+   "y": 1067.6,
+   "rot": 0.7,
+   "cls": "t-region t-region--soft",
+   "anchor": "start",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 3
+  },
+  {
+   "text": "Hamun",
+   "x": 407.1,
+   "y": 888.6,
+   "rot": -6,
+   "cls": "t-river",
+   "anchor": "start",
+   "layer": "labels",
+   "reveal": [
+    1.2,
+    1.5
+   ],
+   "priority": 4
+  },
+  {
+   "text": "Arghandab",
+   "x": 861.6,
+   "y": 881.1,
+   "rot": -38,
+   "cls": "t-river",
+   "anchor": "start",
+   "layer": "labels",
+   "reveal": [
+    1.2,
+    1.5
+   ],
+   "priority": 4
+  },
+  {
+   "text": "Amu Darya",
+   "x": 835.7,
+   "y": 259.6,
+   "rot": 12,
+   "cls": "t-river",
+   "anchor": "start",
+   "layer": "labels",
+   "reveal": [
+    1.2,
+    1.5
+   ],
+   "priority": 4
+  },
+  {
+   "text": "Helmand",
+   "x": 608.6,
+   "y": 919.4,
+   "rot": -20,
+   "cls": "t-river",
+   "anchor": "start",
+   "layer": "labels",
+   "reveal": [
+    1.2,
+    1.5
+   ],
+   "priority": 4
+  },
+  {
+   "text": "IRAN",
+   "x": 300,
+   "y": 836,
+   "rot": -77.1,
+   "cls": "t-country",
+   "anchor": "middle",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 3
+  },
+  {
+   "text": "TURKMENISTAN",
+   "x": 500,
+   "y": 303,
+   "rot": -11.5,
+   "cls": "t-country",
+   "anchor": "middle",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 3
+  },
+  {
+   "text": "UZBEKISTAN",
+   "x": 865,
+   "y": 204,
+   "rot": -0.1,
+   "cls": "t-country",
+   "anchor": "middle",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 3
+  },
+  {
+   "text": "TAJIKISTAN",
+   "x": 1155,
+   "y": 166,
+   "rot": -0.3,
+   "cls": "t-country",
+   "anchor": "middle",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 3
+  },
+  {
+   "text": "CHINA",
+   "x": 1674,
+   "y": 300,
+   "rot": -79.9,
+   "cls": "t-country",
+   "anchor": "middle",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 3
+  },
+  {
+   "text": "PAKISTAN",
+   "x": 1125,
+   "y": 997,
+   "rot": -37.9,
+   "cls": "t-country",
+   "anchor": "middle",
+   "layer": "labels",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 3
+  },
+  {
+   "text": "M. Polo went this way - - -",
+   "x": 1040.4,
+   "y": 251,
+   "rot": -3,
+   "cls": "t-note t-note--small",
+   "anchor": "start",
+   "layer": "notes",
+   "reveal": [
+    2.3,
+    2.7
+   ],
+   "priority": 6
+  },
+  {
+   "text": "Baghlan",
+   "x": 1075.7,
+   "y": 375,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Farah",
+   "x": 496.8,
+   "y": 831,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Balkh",
+   "x": 896.5,
+   "y": 319.8,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Meymaneh",
+   "x": 700.6,
+   "y": 435.6,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Andkhvoy",
+   "x": 728.8,
+   "y": 321.3,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Qalat",
+   "x": 908,
+   "y": 861.4,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Ghazni",
+   "x": 1048.8,
+   "y": 694.5,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Feyzabad",
+   "x": 1255.7,
+   "y": 263,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Charikar",
+   "x": 1124,
+   "y": 509.3,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Gardiz",
+   "x": 1128.3,
+   "y": 685.3,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Karokh",
+   "x": 523.1,
+   "y": 609.5,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Sheberghan",
+   "x": 786.7,
+   "y": 343.5,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Pol-e Khomri",
+   "x": 1076.1,
+   "y": 397.2,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Qala i Naw",
+   "x": 565.4,
+   "y": 553.3,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Chaghcharan",
+   "x": 746.9,
+   "y": 593.4,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Lashkar Gah",
+   "x": 692.7,
+   "y": 913,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Zaranj",
+   "x": 485.9,
+   "y": 963.8,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Tarin Kowt",
+   "x": 813.1,
+   "y": 805,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Zareh Sharan",
+   "x": 1049.7,
+   "y": 777.9,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Asadabad",
+   "x": 1315.2,
+   "y": 520.4,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Taloqan",
+   "x": 1158.2,
+   "y": 305.3,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Mahmud-E Eraqi",
+   "x": 1140.6,
+   "y": 508.6,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Mehtar Lam",
+   "x": 1222.9,
+   "y": 550.4,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Baraki Barak",
+   "x": 1103.6,
+   "y": 642,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Aybak",
+   "x": 1009.1,
+   "y": 364.8,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Mayda Shahr",
+   "x": 1086.8,
+   "y": 582.6,
+   "rot": 0,
+   "cls": "t-town",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Salang Pass 3,878 m",
+   "x": 1111.9,
+   "y": 476.5,
+   "rot": 0,
+   "cls": "t-pass",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 4
+  },
+  {
+   "text": "Shibar Pass",
+   "x": 1032.8,
+   "y": 530.9,
+   "rot": 0,
+   "cls": "t-pass",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 4
+  },
+  {
+   "text": "Anjuman Pass 4,430 m",
+   "x": 1207,
+   "y": 388.3,
+   "rot": 0,
+   "cls": "t-pass",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 4
+  },
+  {
+   "text": "Khyber Pass",
+   "x": 1311.4,
+   "y": 617.6,
+   "rot": 0,
+   "cls": "t-pass",
+   "anchor": "start",
+   "layer": "towns",
+   "reveal": [
+    1.8,
+    2.2
+   ],
+   "priority": 4
+  },
+  {
+   "text": "NOSHAQ 7,492 m",
+   "x": 1378.9,
+   "y": 337.9,
+   "rot": 0,
+   "cls": "w-peak",
+   "anchor": "start",
+   "layer": "wakhan",
+   "reveal": [
+    1.9,
+    2.3
+   ],
+   "priority": 3
+  },
+  {
+   "text": "(highest in Afghanistan)",
+   "x": 1379.7,
+   "y": 345.9,
+   "rot": 0,
+   "cls": "w-small",
+   "anchor": "start",
+   "layer": "wakhan",
+   "reveal": [
+    1.9,
+    2.3
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Ishkashim",
+   "x": 1296.1,
+   "y": 311.1,
+   "rot": 0,
+   "cls": "w-place",
+   "anchor": "start",
+   "layer": "wakhan",
+   "reveal": [
+    1.9,
+    2.3
+   ],
+   "priority": 3
+  },
+  {
+   "text": "Khandud",
+   "x": 1367.7,
+   "y": 288.3,
+   "rot": 0,
+   "cls": "w-place",
+   "anchor": "start",
+   "layer": "wakhan",
+   "reveal": [
+    1.9,
+    2.3
+   ],
+   "priority": 3
+  },
+  {
+   "text": "Sarhad-e Broghil",
+   "x": 1456.5,
+   "y": 281.9,
+   "rot": 0,
+   "cls": "w-place",
+   "anchor": "start",
+   "layer": "wakhan",
+   "reveal": [
+    1.9,
+    2.3
+   ],
+   "priority": 3
+  },
+  {
+   "text": "Bozai Gumbaz",
+   "x": 1533.3,
+   "y": 268.7,
+   "rot": 0,
+   "cls": "w-small",
+   "anchor": "start",
+   "layer": "wakhan",
+   "reveal": [
+    1.9,
+    2.3
+   ],
+   "priority": 5
+  },
+  {
+   "text": "→ China",
+   "x": 1606.1,
+   "y": 285.5,
+   "rot": 0,
+   "cls": "w-note",
+   "anchor": "start",
+   "layer": "wakhan",
+   "reveal": [
+    1.9,
+    2.3
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Zorkul",
+   "x": 1516.1,
+   "y": 233.5,
+   "rot": 0,
+   "cls": "w-small",
+   "anchor": "start",
+   "layer": "wakhan",
+   "reveal": [
+    1.9,
+    2.3
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Kyrgyz yurts",
+   "x": 1562.1,
+   "y": 251.9,
+   "rot": 0,
+   "cls": "w-note",
+   "anchor": "start",
+   "layer": "wakhan",
+   "reveal": [
+    1.9,
+    2.3
+   ],
+   "priority": 5
+  },
+  {
+   "text": "BIG PAMIR",
+   "x": 1432.1,
+   "y": 244.3,
+   "rot": 0,
+   "cls": "w-region",
+   "anchor": "start",
+   "layer": "wakhan",
+   "reveal": [
+    1.9,
+    2.3
+   ],
+   "priority": 5
+  },
+  {
+   "text": "LITTLE PAMIR",
+   "x": 1411.3,
+   "y": 254.3,
+   "rot": 0,
+   "cls": "w-region",
+   "anchor": "start",
+   "layer": "wakhan",
+   "reveal": [
+    1.9,
+    2.3
+   ],
+   "priority": 5
+  },
+  {
+   "text": "TAJIKISTAN",
+   "x": 1465.7,
+   "y": 209.1,
+   "rot": 0,
+   "cls": "w-country",
+   "anchor": "start",
+   "layer": "wakhan",
+   "reveal": [
+    1.9,
+    2.3
+   ],
+   "priority": 5
+  },
+  {
+   "text": "PAKISTAN",
+   "x": 1426.1,
+   "y": 357.5,
+   "rot": 0,
+   "cls": "w-country",
+   "anchor": "start",
+   "layer": "wakhan",
+   "reveal": [
+    1.9,
+    2.3
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Wakhan River",
+   "x": 1510.1,
+   "y": 298.7,
+   "rot": 0,
+   "cls": "w-river",
+   "anchor": "start",
+   "layer": "wakhan",
+   "reveal": [
+    1.9,
+    2.3
+   ],
+   "priority": 5
+  },
+  {
+   "text": "Panj",
+   "x": 1367.3,
+   "y": 275.9,
+   "rot": 0,
+   "cls": "w-river",
+   "anchor": "start",
+   "layer": "wakhan",
+   "reveal": [
+    1.9,
+    2.3
+   ],
+   "priority": 5
+  },
+  {
+   "text": "N",
+   "x": 1769.2,
+   "y": 117.2,
+   "rot": 9,
+   "cls": "t-compass",
+   "anchor": "start",
+   "layer": "compass",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 2
+  },
+  {
+   "text": "(not to scale!!)",
+   "x": 170,
+   "y": 1150,
+   "rot": -3,
+   "cls": "t-note t-note--small",
+   "anchor": "start",
+   "layer": "scale",
+   "reveal": [
+    0,
+    0
+   ],
+   "priority": 2
+  }
+ ]
+}

@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://picsum.photos https://*.picsum.photos; connect-src 'self' https://api.open-meteo.com; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Afghanistan Field Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Architects+Daughter&family=Reenie+Beanie&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root { --paper: #ebe7dd; --ink: #37332e; --red: #b8432f; --green: #5f8c4e; --tile: #1aa0b4; --lz: 1; } /* tile: Blue Mosque turquoise — photo stops only */
+  html, body { margin: 0; height: 100%; background: var(--paper); overflow: hidden; }
+  #map { position: fixed; inset: 0; background: var(--paper); }
+  /* cursors say what a click does: at the whole map a pencil magnifier (+) — click to lean in; zoomed in the
+     hand — drag to wander. Set on the container itself to beat Leaflet's own .leaflet-grab rule. */
+  html:not(.zoomed) #map.leaflet-container { cursor: var(--cur-in), zoom-in; }
+  html.zoomed #map.leaflet-container { cursor: grab; }
+  html #map.leaflet-container.leaflet-dragging { cursor: grabbing; }
+  html.opening #map.leaflet-container { cursor: default; }
+  /* the lens: a small pencil ring drifting after the pointer at the whole map — "this can be looked at closer" —
+     noticeable through its gentle motion, quiet in itself; a one-time lettered tip on a first visit */
+  .lens { position: fixed; left: 0; top: 0; z-index: 455; pointer-events: none; opacity: 0; transition: opacity .3s ease; will-change: transform; }
+  .lens.on { opacity: 1; }
+  .lens svg { position: absolute; left: -40px; top: -40px; overflow: visible; }
+  .lens path { fill: none; stroke: var(--ink); stroke-linecap: round; }
+  .lens .rim { stroke-width: 1.4; stroke-opacity: .42; }
+  .lens .glint { stroke-width: 1.1; stroke-opacity: .3; }
+  .lens-tip { position: absolute; left: 38px; top: 18px; white-space: nowrap; font: 20px/1 "Reenie Beanie", cursive; color: var(--ink);
+    opacity: 0; transform: rotate(-4deg); transition: opacity .5s ease; }
+  .lens-tip.on { opacity: .8; }
+  html.zoomed .lens, html.opening .lens { display: none; }
+  @media (pointer: coarse) { .lens { display: none; } }
+  .leaflet-container { background: var(--paper); font: inherit; outline: none; }
+  .leaflet-tile { filter: none; }
+  /* tiers fade in/out during the jump instead of switching */
+  .leaflet-tile-pane .leaflet-layer { transition: opacity .45s ease; }
+  .still .leaflet-tile-pane .leaflet-layer { transition: none; }
+  /* paper tooth + soft light falloff over the sheet */
+  .paper::before, .paper::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 500; }
+  .paper::before { background: var(--tex-paper) 0 0 / 240px; mix-blend-mode: soft-light; opacity: .35; }
+  /* age: the sheet browns towards its edges, with a few soft foxing spots; multiply keeps it
+     sitting in the paper rather than on top of it */
+  .paper::after {
+    background:
+      radial-gradient(18% 14% at 12% 22%, rgb(150 115 70 / .04), transparent 70%),
+      radial-gradient(10% 9% at 83% 71%, rgb(150 115 70 / .035), transparent 70%),
+      radial-gradient(115% 95% at 46% 42%, transparent 55%, rgb(110 90 60 / .10) 88%, rgb(90 72 48 / .16));
+    mix-blend-mode: multiply;
+  }
+
+  /* ---- live hand lettering ---- */
+  .lbl { opacity: 0; position: absolute; left: 0; bottom: 0; white-space: nowrap; color: var(--ink); transform-origin: 0 100%;
+         transition: opacity .35s ease; pointer-events: none; font-size: calc(var(--fs) * var(--lz)); line-height: 1; }
+  .lbl.mid { transform-origin: 50% 100%; }
+  .lbl.end { transform-origin: 100% 100%; }
+  .lbl span { display: inline-block; }
+  .lbl i { display: inline-block; width: .32em; }
+  .lbl.is-hidden { opacity: 0 !important; }
+  .lbl.ci-cover { opacity: 0 !important; } /* a minor name under the check-in's lettering steps aside */
+  .AD { font-family: "Architects Daughter", cursive; }
+  /* Architects Daughter has no bold: main cities are 'pressed harder' — a same-colour outline thickens the strokes */
+  .lbl.heavy { -webkit-text-stroke: .045em currentColor; paint-order: stroke fill; }
+  .lbl.heavy.big { -webkit-text-stroke-width: .055em; }
+  .RB { font-family: "Reenie Beanie", cursive; }
+
+  /* ---- photo stacks pinned to the map (map units; the layer scales with zoom) ---- */
+  .ps { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+  .pp-lead { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; transition: opacity .3s; }
+  .pp-lead path { fill: none; stroke: var(--ink); stroke-opacity: .55; stroke-width: .7; stroke-linecap: round; stroke-dasharray: 3 1.4 5 1.2; }
+  /* the milestone marker: a turquoise diamond on the exact place (map px; scales with the sheet) */
+  .ps-stop { position: absolute; left: calc(-1 * var(--ch) - 3px); top: calc(-1 * var(--ch) - 3px); width: calc(2 * var(--ch) + 6px); height: calc(2 * var(--ch) + 6px);
+    padding: 0; border: 0; background: none; cursor: pointer; z-index: 2; }
+  .ps-stop svg { position: absolute; left: calc(var(--ch) + 3px); top: calc(var(--ch) + 3px); overflow: visible; transition: transform .28s cubic-bezier(.3,1.6,.5,1); }
+  .ps-stop:hover svg, .ps.open .ps-stop svg { transform: scale(1.7); } /* picked up: bigger */
+  .ps-stop:focus { outline: none; }
+  .stop-shadow { fill: var(--ink); fill-opacity: .25; }
+  .stop-tile { fill: var(--tile); }
+  .stop-line { fill: none; stroke: var(--ink); stroke-width: .7; stroke-opacity: .8; stroke-linejoin: round; }
+  .ps-stop:hover .stop-tile { fill: #12b5cc; }
+  /* the milestone tag: a paper luggage tag tied to the diamond, readable at any zoom (counter-scaled by --s) */
+  .ps-tag { position: absolute; top: calc(-1.7 * var(--ch) - 2px); z-index: 30; pointer-events: none; opacity: 0; transition: opacity .2s ease;
+    display: flex; flex-direction: column; gap: 3px; padding: 7px 11px 8px 20px; background: #f4f1e8; color: var(--ink); white-space: nowrap;
+    clip-path: polygon(9px 0, 100% 0, 100% 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
+    filter: drop-shadow(.5px 1px .8px rgb(40 30 20 / .3)); }
+  .ps-tag::before { content: ""; position: absolute; left: 7px; top: 50%; width: 6px; height: 6px; margin-top: -3px; border-radius: 50%; box-shadow: inset 0 0 0 1.2px rgb(55 51 46 / .55); background: var(--paper); }
+  .ps-tag.right { left: calc(var(--ch) * 1.7 + 4px); transform-origin: 0 0; transform: scale(calc(1 / var(--s, 1))) rotate(-2deg); }
+  .ps-tag.left { right: calc(var(--ch) * 1.7 + 4px); transform-origin: 100% 0; transform: scale(calc(1 / var(--s, 1))) rotate(2deg); }
+  .ps-tag b { font: 700 15px/1 "Amatic SC", cursive; letter-spacing: .16em; text-transform: uppercase; color: var(--red); }
+  .tg-where { font: 12px/1.1 "Architects Daughter", cursive; letter-spacing: .04em; }
+  .tg-title { font: 22px/1 "Reenie Beanie", cursive; }
+  .ps:has(.ps-stop:hover) .ps-tag, .ps:has(.ps-stop:focus-visible) .ps-tag, .ps.open .ps-tag { opacity: 1; }
+  .ps:has(.ps-stop:hover) { z-index: 12; }
+  /* a milestone being looked at lifts its whole layer above the check-in pin (pane order: labels 450, photos 460,
+     check-in 470, an opened pile 480, a hovered stop 490) */
+  .leaflet-photos-pane:has(.ps-stop:hover) { z-index: 490 !important; }
+  .ps-pile { position: absolute; left: 0; top: 0; z-index: 1; transform: translate(var(--x), var(--y)); } /* always above its own leader */
+  .pp-lead { z-index: 0; }
+  .pp-lead path { transition: opacity .3s; }
+  .ps.open .pp-lead path { opacity: 0; } /* dealt out: the line into the middle of the spread means nothing; the ring stays */
+  /* each print: a shadow wrapper (filter) around a deckle-cut paper (clip-path) */
+  .pp { position: absolute; left: -32px; top: -29px; width: 64px; height: 58px; padding: 0; margin: 0; border: 0; background: none; cursor: pointer;
+    transform: translate(var(--sx), var(--sy)) rotate(var(--sr));
+    filter: drop-shadow(.4px .7px .6px rgb(40 30 20 / .28)) drop-shadow(1.2px 2.2px 2.4px rgb(40 30 20 / .14));
+    transition: transform .5s cubic-bezier(.2,.75,.2,1) var(--d), filter .3s; }
+  /* isolation: the photo's multiply blend stays inside its own print (it used to show the pencil leader through the photo) */
+  .pp-paper { position: absolute; inset: 0; display: block; background: #f4f1e8; padding: 3.4px 3.4px 0; box-sizing: border-box; isolation: isolate; }
+  .pp:focus { outline: none; } /* no browser focus ring on a clicked print… */
+  .pp:focus-visible { outline: 1px dashed var(--ink); outline-offset: 2px; } /* …but keyboard users still see where they are */
+  .pp-photo { display: block; width: 100%; height: 39px; overflow: hidden; background: #cfc8bb; }
+  .pp-photo img { width: 100%; height: 100%; object-fit: cover; display: block; filter: contrast(.93) saturate(.85) sepia(.12); mix-blend-mode: multiply; }
+  .pp-cap { display: block; padding-top: 3px; font: 5.4px/1 "Reenie Beanie", cursive; color: var(--ink); white-space: nowrap; overflow: hidden; text-align: left; }
+  .pp-tape { position: absolute; left: -11px; top: -32px; width: 22px; height: 6px; z-index: 20; pointer-events: none;
+    transform: translateX(var(--tx, 0)) rotate(calc(var(--rot, 0deg) + var(--tr, 0deg))); background: rgb(214 226 150 / .72); mix-blend-mode: multiply;
+    clip-path: polygon(0 12%, 4% 0, 96% 6%, 100% 20%, 97% 50%, 100% 85%, 94% 100%, 5% 94%, 0 70%, 3% 45%); transition: opacity .3s; }
+  .ps-count { position: absolute; left: 12px; top: 30px; white-space: nowrap; font: 6px "Reenie Beanie", cursive; color: var(--ink); opacity: .75; transition: opacity .3s; pointer-events: none; }
+  /* hover: the pile loosens, inviting a click */
+  .ps:not(.open) .ps-pile:hover .pp { transform: translate(calc(var(--sx) * 1.6), calc(var(--sy) * 1.6 - 1px)) rotate(calc(var(--sr) * 1.25)); }
+  /* dealt out: a loose spread around the place; everything else steps back */
+  .ps.open .pp { transform: translate(var(--fx), var(--fy)) rotate(var(--fr)); cursor: zoom-in; transition-delay: calc(var(--d) * .6); }
+  .ps.open .pp:hover { filter: drop-shadow(.6px 1px .8px rgb(40 30 20 / .3)) drop-shadow(2.4px 4.4px 4.8px rgb(40 30 20 / .18)); }
+  .ps.open .pp-tape, .ps.open .ps-count { opacity: 0; }
+  .ps.open { z-index: 10; }
+  .focusing .ps:not(.open) { opacity: .35; transition: opacity .3s; }
+  .ps { transition: opacity .3s; }
+  /* held up close */
+  .pp-lightbox { position: fixed; inset: 0; z-index: 900; display: grid; place-items: center; background: rgb(30 26 20 / 0); transition: background .28s ease; cursor: zoom-out; }
+  .pp-lightbox.on { background: rgb(30 26 20 / .45); }
+  .pp-lightbox[hidden] { display: none; } /* display:grid above would otherwise override [hidden] */
+  .pp-held { position: relative; margin: 0; width: min(78vw, 820px); padding: 18px 18px 0; background: #f7f5ef;
+    transform: translateY(24px) rotate(var(--r)) scale(.92); opacity: 0; transition: transform .32s cubic-bezier(.2,.7,.2,1), opacity .25s ease;
+    box-shadow: 0 1px 2px rgb(0 0 0 / .25), 0 18px 40px rgb(0 0 0 / .35); }
+  .pp-lightbox.on .pp-held { transform: rotate(var(--r)); opacity: 1; }
+  .pp-held img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; filter: contrast(.95) saturate(.9) sepia(.08); }
+  .pp-held figcaption { display: flex; gap: 14px; align-items: baseline; padding: 12px 2px 16px; font: 30px/1.1 "Reenie Beanie", cursive; color: var(--ink); }
+  .pp-held figcaption b { font: 16px "Architects Daughter", cursive; letter-spacing: .08em; white-space: nowrap; }
+  .pp-held figcaption .n { margin-left: auto; font: 14px Inter, sans-serif; opacity: .5; }
+  .pp-nav { position: fixed; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; border: 0; background: rgb(255 255 255 / .85); font: 20px Inter, sans-serif; cursor: pointer; }
+  .pp-nav.prev { left: 24px; } .pp-nav.next { right: 24px; }
+  .pp-held .pp-tape { width: 120px; height: 30px; left: 50%; margin-left: -60px; top: -14px; }
+
+  /* ---- today in Afghanistan: lettered onto the paper like a map legend (no box) ---- */
+  /* bottom-right: the empty paper south-east of the country, clear of the map's own notes */
+  .almanac { position: fixed; right: 84px; bottom: 30px; z-index: 700; width: 300px; color: var(--ink); pointer-events: none; transform: rotate(-.8deg) scale(1.4); transform-origin: 100% 100%; }
+  .alm-title { font: 14px "Architects Daughter", cursive; letter-spacing: .22em; text-transform: uppercase; -webkit-text-stroke: .03em currentColor; }
+  .alm-rule { display: block; margin: 1px 0 8px; }
+  .alm-row { display: flex; align-items: baseline; gap: 4px; line-height: 1.25; }
+  .alm-k { font: 12px "Architects Daughter", cursive; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; }
+  .alm-dots { flex: 1; overflow: hidden; white-space: nowrap; font: 16px "Reenie Beanie", cursive; letter-spacing: .12em; opacity: .7; min-width: 16px; }
+  .alm-v { font: 22px/1 "Reenie Beanie", cursive; white-space: nowrap; }
+  .alm-v small { font: 15px "Reenie Beanie", cursive; opacity: .6; }
+  /* general details step aside while you're zoomed in, and ease back at the whole-map view */
+  .almanac, .hint, .title-block { transition: opacity .45s ease, translate .45s cubic-bezier(.2,.7,.2,1); }
+  html.zoomed .almanac, html.zoomed .title-block { opacity: 0; translate: 0 8px; }
+  html:not(.zoomed) .title-block { transition-delay: .15s; }
+  html.zoomed .hint { opacity: 0 !important; }
+  html:not(.zoomed) .almanac { transition-delay: .15s; } /* let the map settle first */
+  @media (max-width: 900px) { .almanac { transform: rotate(-.8deg) scale(1.1); } }
+  @media (max-width: 600px) { .almanac { transform: rotate(-.8deg) scale(.8); right: 64px; bottom: 70px; } }
+
+  /* ---- preloader: the notebook's title page, a pencil line grows as the sheets load ---- */
+  #preload { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; background: var(--paper); color: var(--ink);
+    transition: opacity .55s ease, visibility 0s linear .55s; }
+  #preload.out { opacity: 0; visibility: hidden; }
+  #preload[hidden] { display: none; }
+  .pl-inner { text-align: center; transform: rotate(-1.2deg); transition: translate .55s cubic-bezier(.2,.7,.2,1); opacity: 0; }
+  .fonts-in .pl-inner { opacity: 1; transition: opacity .3s ease, translate .55s cubic-bezier(.2,.7,.2,1); }
+  #preload.out .pl-inner { translate: 0 -10px; }
+  .pl-kicker { font: 28px/1 "Reenie Beanie", cursive; opacity: .75; margin-bottom: 6px; }
+  .pl-title { font: 30px/1 "Architects Daughter", cursive; letter-spacing: .42em; margin-right: -.42em; -webkit-text-stroke: .035em currentColor; }
+  .pl-line { display: block; width: 300px; height: 16px; margin: 10px auto 0; overflow: visible; }
+  .pl-line path { fill: none; stroke: var(--ink); stroke-linecap: round; }
+  .pl-line .guide { stroke-opacity: .1; stroke-width: 1; stroke-dasharray: .012 .01; }
+  .pl-line .lead { stroke-opacity: .8; stroke-width: 2.2; stroke-dasharray: 1 1; stroke-dashoffset: var(--left, 1); transition: stroke-dashoffset .35s ease-out; }
+  .pl-note { font: 20px/1 "Reenie Beanie", cursive; opacity: .55; margin-top: 8px; min-height: 20px; }
+
+  /* ---- opening: the drawing is revealed on a canvas (js/map/opening.js); lettering is written
+     letter by letter; stacks, the today note and controls settle in last. --d / --xd = start times ---- */
+  .tier-t0 { transition: none !important; } /* the base drawing is always fully on: no fade, so the swap below is instant */
+  html.op-drawing .tier-t0 { opacity: 0 !important; } /* the canvas stands in for it until the drawing is complete */
+  .opening-canvas { pointer-events: none; }
+  /* before the drawing starts everything waits hidden; html.op-play (added when it starts) runs the
+     animations, so their delays count from that moment — not from when the elements were created */
+  html.opening .lbl span { clip-path: inset(-40% 105% -40% -10%); }
+  html.opening .ps .pp-lead, html.opening .ps .ps-stop, html.opening .ps .ps-pile, html.opening .almanac, html.opening .zoom, html.opening .hint, html.opening .title-block { opacity: 0; }
+  html.op-play .lbl span { animation: write .11s linear calc(var(--d, 0s) + var(--i, 0) * 42ms) both; }
+  /* each stack: its pencil leader + ring first, then the pile is dropped onto the paper */
+  html.op-play .ps .pp-lead, html.op-play .ps .ps-stop { animation: settle .45s ease var(--xd, 0s) both; }
+  html.op-play .ps .ps-pile { animation: drop .6s cubic-bezier(.2,.7,.2,1) calc(var(--xd, 0s) + .18s) both; }
+  html.op-play .almanac, html.op-play .zoom, html.op-play .hint, html.op-play .title-block { animation: settle .9s ease var(--xd, 0s) both; }
+  @keyframes write { to { clip-path: inset(-40% -25% -40% -10%); } }
+  @keyframes drop { from { opacity: 0; translate: 0 -18px; scale: 1.06; } to { opacity: 1; translate: 0 0; scale: 1; } }
+  @keyframes settle { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
+  html.op-frozen *, html.op-frozen *::before { animation-play-state: paused !important; }
+
+  /* ---- last check-in: red pencil ring (looser = less exact) + a lettered note; constant screen size ---- */
+  .ci-icon { width: 0; height: 0; }
+  .ci { position: absolute; left: 0; top: 0; pointer-events: none; }
+  .ci-mark { position: absolute; left: 0; top: 0; overflow: visible; }
+  .ci-arrow, .ci-head { fill: none; stroke: var(--red); stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .ci-arrow { stroke-width: 1.8; stroke-opacity: .9; transition: stroke-dashoffset .7s cubic-bezier(.4,.1,.3,1) .5s; }
+  .ci-head { stroke-width: 2; transition: stroke-dashoffset .25s ease 1.15s; }
+  .ci-text { position: absolute; display: flex; flex-direction: column; gap: 1px; line-height: 1; color: var(--red); white-space: nowrap;
+    transform: rotate(-3deg); opacity: 0; transition: opacity .5s ease; }
+  .ci-text.end { align-items: flex-end; text-align: right; }
+  .ci-k { font: 26px/0.9 "Reenie Beanie", cursive; -webkit-text-stroke: .02em currentColor; }
+  .ci-when { font: 19px "Reenie Beanie", cursive; opacity: .85; }
+  .ci-name { font: 13px "Architects Daughter", cursive; letter-spacing: .05em; margin-top: 2px; }
+  .ci-note { font: 19px "Reenie Beanie", cursive; color: var(--ink); white-space: normal; width: max-content; max-width: 220px; }
+  .ci-name:empty, .ci-note:empty { display: none; }
+  /* overview: just "I was here! · 5 days ago"; the place and the note join it once you lean in */
+  html:not(.zoomed) .ci-name, html:not(.zoomed) .ci-note { display: none; }
+  .ci.in .ci-arrow, .ci.in .ci-head { stroke-dashoffset: 0; }
+  .ci.in .ci-text { opacity: 1; }
+  .still .ci *, .still .ci { transition: none !important; }
+
+  /* ---- title block: lettered onto the empty top-left of the sheet, like a travel-journal spread ---- */
+  .title-block { position: fixed; left: 38px; top: 24px; z-index: 700; color: var(--ink); pointer-events: none; transform: rotate(-1.2deg); transform-origin: 0 0; margin: 0; }
+  .tb-date { font: 22px/1 "Reenie Beanie", cursive; color: var(--green); letter-spacing: .02em; }
+  .tb-kicker { font: 700 30px/1 "Amatic SC", cursive; letter-spacing: .07em; margin-top: 8px; }
+  .tb-title { font: 700 80px/.86 "Amatic SC", cursive; letter-spacing: .05em; margin: 2px 0 0 -2px; -webkit-text-stroke: .018em currentColor; }
+  .tb-rule { display: block; overflow: visible; }
+  .tb-rule.thin { margin: 3px 0 2px; }
+  .tb-rule.heavy { margin-top: 4px; }
+  @media (max-width: 900px) { .title-block { transform: rotate(-1.2deg) scale(.72); } }
+  @media (max-width: 600px) { .title-block { transform: rotate(-1.2deg) scale(.55); left: 18px; top: 16px; } }
+
+  /* ---- chrome ---- */
+  .ui { position: fixed; z-index: 800; font: 500 13px/1 Inter, system-ui, sans-serif; color: #2b2d33; }
+  .ui button { font: inherit; color: inherit; background: rgb(255 255 255 / .75); border: 1px solid rgb(0 0 0 / .14); border-radius: 999px; padding: 9px 13px; cursor: pointer; backdrop-filter: blur(6px); }
+  .ui button:hover { background: #fff; }
+  .ui button:focus-visible { outline: 2px solid #2b2d33; outline-offset: 2px; }
+  .zoom { right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
+  .zoom button { width: 40px; height: 40px; padding: 0; font-size: 18px; }
+  .hint { left: calc(50% - 70px); bottom: 20px; transform: translateX(-50%) rotate(-1deg); /* clear of the today note */ font: 24px "Reenie Beanie", cursive; color: rgb(30 32 40 / .75); transition: opacity .6s; pointer-events: none; }
+  .readout { left: 20px; bottom: 184px; font: 12px/1.4 Inter, sans-serif; background: rgb(255 255 255 / .8); border: 1px solid rgb(0 0 0 / .12); border-radius: 8px; padding: 8px 10px; opacity: 0; transition: opacity .3s; }
+  .readout.on { opacity: 1; }
+  /* zoomed in: a lettered note by the buttons — the way back out */
+  .back-note { right: 66px; bottom: 26px; font: 22px/1 "Reenie Beanie", cursive; color: var(--ink); opacity: 0; translate: 6px 0; pointer-events: none;
+    transform: rotate(-2deg); transition: opacity .4s ease .2s, translate .4s ease .2s; white-space: nowrap; }
+  html.zoomed .back-note { opacity: .75; translate: 0 0; }
+  @media (max-width: 600px) { .back-note { bottom: 22px; font-size: 19px; } }
+  @media (max-width: 600px) { .hint { font-size: 20px; bottom: 70px; } }
+</style>
+</head>
+<body class="paper">
+<div id="preload" aria-live="polite" aria-label="Loading the map">
+  <div class="pl-inner">
+    <div class="pl-kicker">field notes from</div>
+    <div class="pl-title">AFGHANISTAN</div>
+    <svg class="pl-line" viewBox="0 0 300 16" aria-hidden="true"><path class="guide" pathLength="1" d="M4 9 C50 6 96 11 150 8 S246 6 296 9"/><path class="lead" pathLength="1" d="M4 9 C50 6 96 11 150 8 S246 6 296 9"/></svg>
+    <div class="pl-note" id="pl-note"></div>
+  </div>
+</div>
+<div id="map" aria-label="Hand-drawn map of Afghanistan. Scroll or pinch to zoom, drag to move." role="application"></div>
+<div class="ui zoom"><button type="button" id="zin" aria-label="Zoom in" title="Lean in">+</button><button type="button" id="zout" aria-label="Zoom out" title="Step back">−</button><button type="button" id="zfit" aria-label="Show whole map" title="Whole map" style="font-size:13px">⤢</button></div>
+<div class="ui hint" id="hint">click, scroll or pinch to lean in — the map reveals more</div>
+<div class="ui back-note" aria-hidden="true">double-tap for the whole map →</div>
+<div class="lens" id="lens" aria-hidden="true"><svg width="80" height="80" viewBox="-40 -40 80 80"></svg><span class="lens-tip">click to look closer</span></div>
+<div class="ui readout" id="readout" aria-live="polite"></div>
+<aside class="almanac" id="almanac"></aside>
+<header class="title-block" id="titleBlock" aria-label="Field notes from Afghanistan">
+  <div class="tb-date">2026 / a traveller's sketchbook</div>
+  <div class="tb-kicker">FIELD NOTES FROM</div>
+  <svg class="tb-rule thin" width="230" height="6" aria-hidden="true"></svg>
+  <h1 class="tb-title">AFGHANISTAN</h1>
+  <svg class="tb-rule heavy" width="360" height="10" aria-hidden="true"></svg>
+</header>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script type="module" src="./js/site.js"></script>
+</body>
+</html>

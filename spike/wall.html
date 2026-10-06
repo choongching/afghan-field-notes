@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Field Notes</title>
+<meta name="description" content="Photographs from the trip, pinned to the wall.">
+<script>
+  // Decide before first paint whether the opening scene plays, so the room starts dark.
+  (() => {
+    const flag = new URLSearchParams(location.search).get('intro');
+    let seen = false; try { seen = sessionStorage.getItem('intro-seen') === '1'; } catch {}
+    if (flag === '1' || (flag !== '0' && !seen)) document.documentElement.classList.add('intro');
+  })();
+</script>
+<link rel="stylesheet" href="../css/intro.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&family=Nanum+Pen+Script&family=Caveat:wght@500&family=Permanent+Marker&family=Gochi+Hand&family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/materials.css">
+<link rel="stylesheet" href="../css/layouts.css">
+<style>
+  html, body { margin: 0; background: var(--wall); overflow-x: hidden; }
+  .viewport { position: relative; width: 100vw; overflow: hidden; }
+  .stage {
+    position: absolute; left: 0; top: 0; width: 2000px; height: 1300px;
+    transform-origin: 0 0; isolation: isolate;
+    filter: blur(.25px); /* kills the "vector-crisp" look; a lens is never perfect */
+  }
+  .camera { position: absolute; inset: 0; transform-origin: 0 0; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="ink-rough" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="8" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="1.4" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+<h1 class="sr-only">Field Notes — photographs from the trip</h1>
+<main class="viewport" id="viewport">
+  <div class="camera" id="camera">
+    <div class="stage" id="stage"><div class="wall"><div class="wall-core"></div></div><div class="falloff"></div></div>
+  </div>
+</main>
+<div class="lights" aria-hidden="true"></div>
+<div class="exposure" aria-hidden="true"></div>
+<p class="cue" aria-hidden="true">click a page to look closer</p>
+<button class="replay" type="button" hidden>↺ replay intro</button>
+<div class="vignette"></div>
+<div class="grain"></div>
+<script type="module" src="../js/main.js"></script>
+</body>
+</html>

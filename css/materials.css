@@ -1,0 +1,238 @@
+/* ==========================================================================
+   Materials. Each physical thing is a stack of: base albedo → micro texture →
+   macro shading (curvature/curl) → contact shadow → cast shadow. Global light
+   falloff, grain and vignette are applied once over the whole "photo".
+   ========================================================================== */
+
+:root {
+  --wall: #c7c9ca;
+  --paper: #f4f4f1;
+  --ink-print: #1f1f22;
+  --tape: rgb(200 232 120);
+  --note-canary: #f3eea0;
+  --note-lemon: #f1ec96;
+
+  /* layer strengths, tunable from the lab */
+  --bump-o: 0.45;
+  --mottle-o: 0.22;
+  --falloff-o: 1;
+  --grain-o: 0.09;
+  --vignette-o: 0.55;
+  --paper-grain-o: 1;
+}
+
+/* ---------- wall ---------- */
+.wall {
+  position: absolute; inset: -800px; /* bleeds past the stage: the wide shot must never see an edge */
+  background: var(--wall);
+}
+.wall::before, .wall::after { content: ""; position: absolute; inset: 0; pointer-events: none; }
+/* orange-peel bump map (a lit grey image, ~0.85 average) — soft-light keeps the hue.
+   Far wall: cheap tile. Behind the collage: full-res core, feathered into the tile. */
+.wall::before { background: var(--tex-wall-bump-tile) 0 0 / 512px 512px; mix-blend-mode: soft-light; opacity: var(--bump-o); }
+.wall-core {
+  position: absolute; left: 700px; top: 700px; right: 700px; bottom: 700px; /* stage ± 100px */
+  background: var(--wall); /* opaque: replaces the tiled bump underneath */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 100px, #000 calc(100% - 100px), transparent),
+                      linear-gradient(to bottom, transparent, #000 100px, #000 calc(100% - 100px), transparent);
+  -webkit-mask-composite: source-in;
+          mask-image: linear-gradient(to right, transparent, #000 100px, #000 calc(100% - 100px), transparent),
+                      linear-gradient(to bottom, transparent, #000 100px, #000 calc(100% - 100px), transparent);
+          mask-composite: intersect;
+}
+.wall-core::before { content: ""; position: absolute; inset: 0; background: var(--tex-wall-bump) 0 0 / 100% 100%; mix-blend-mode: soft-light; opacity: var(--bump-o); }
+.wall::after  { background: var(--tex-wall-mottle) 0 0 / 1024px 1024px; mix-blend-mode: soft-light; opacity: var(--mottle-o); }
+
+/* ---------- items & shadows ---------- */
+.item {
+  position: absolute;
+  transform: rotate(var(--rot, 0deg));
+  transform-origin: 50% 0;
+}
+.shadow { position: absolute; inset: 0; pointer-events: none; transform-origin: 50% 0; transition: transform .5s cubic-bezier(.2,.7,.2,1); }
+/* ambient occlusion right under the edge: dark, tight, almost uniform */
+.shadow.contact {
+  border-radius: 1px;
+  box-shadow: 0 0 0.6px 0.2px rgb(0 0 0 / .32), 0 0.6px 1.8px rgb(0 0 0 / .22);
+}
+/* projected shadow: fades in towards the lifted bottom edge */
+.shadow.cast {
+  background: rgb(28 34 46 / var(--cast-alpha, .3));
+  filter: blur(var(--cast-blur, 4px));
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgb(0 0 0 / .35) 30%, #000 85%);
+          mask-image: linear-gradient(to bottom, transparent 0%, rgb(0 0 0 / .35) 30%, #000 85%);
+  transition: transform .5s cubic-bezier(.2,.7,.2,1), filter .5s, background .5s;
+}
+
+/* ---------- paper sheet ---------- */
+.paper {
+  position: absolute; inset: 0; overflow: hidden;
+  background: var(--paper);
+  color: var(--ink-print);
+  transform-origin: 50% 0;
+  transition: transform .5s cubic-bezier(.2,.7,.2,1);
+}
+.sheet[data-hover="1"] .paper { transform: perspective(900px) rotateX(3.5deg); }
+/* ink sits *in* the paper, not on top: multiply + slightly lifted blacks */
+.paper img, .paper .photo {
+  display: block; object-fit: cover;
+  mix-blend-mode: multiply;
+  filter: contrast(.93) saturate(.9) brightness(1.02);
+}
+.paper-grain {
+  position: absolute; inset: 0; pointer-events: none; opacity: var(--paper-grain-o);
+  background: var(--tex-paper) 0 0 / 240px 240px;
+  mix-blend-mode: soft-light;
+  opacity: calc(var(--paper-grain-o) * .55);
+}
+.paper-grain::after {
+  content: ""; position: absolute; inset: 0;
+  background: var(--tex-fibre) 0 0 / 300px 300px;
+  opacity: .35;
+}
+/* macro shading: taped top is flat, the lower third bows off the wall and the
+   bottom corners start to curl — slightly darker, a hint of edge highlight */
+.paper-shade {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(120% 40% at 0% 100%, rgb(0 0 0 / .05), transparent 60%),
+    radial-gradient(120% 40% at 100% 100%, rgb(0 0 0 / .06), transparent 60%),
+    linear-gradient(to bottom, rgb(255 255 255 / .05) 0%, transparent 25%, transparent 60%, rgb(0 0 0 / .045) 100%);
+  box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .05);
+}
+
+/* ---------- masking tape ---------- */
+.tape {
+  position: absolute;
+  transform: rotate(var(--tape-rot, 0deg));
+  mix-blend-mode: multiply;               /* translucent: paper & wall show through */
+  filter: drop-shadow(0 .5px .35px rgb(0 0 0 / .22));
+  pointer-events: none;
+  z-index: 50;
+}
+.tape i {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to bottom, rgb(255 255 255 / .18), transparent 30%, transparent 75%, rgb(0 0 0 / .06)),
+    var(--tex-crepe) var(--crepe-x, 0) 0 / 220px 60px,
+    var(--tape);
+  background-blend-mode: normal, soft-light, normal;
+  opacity: .78;
+}
+
+/* ---------- sticky notes ---------- */
+.note { z-index: 60; }
+.note-paper {
+  position: absolute; inset: 0; overflow: hidden;
+  background: var(--note-canary);
+  transform-origin: 50% 0;
+  /* the free bottom curls towards the camera → foreshortening */
+  transform: perspective(520px) rotateX(var(--curl, 7deg));
+  transition: transform .45s cubic-bezier(.2,.7,.2,1);
+}
+.note--lemon .note-paper { background: var(--note-lemon); }
+.note[data-hover="1"] .note-paper { transform: perspective(520px) rotateX(calc(var(--curl, 7deg) * 2.2)); }
+.note-shade {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    /* adhesive strip: flat, marginally more saturated/darker */
+    linear-gradient(to bottom, rgb(120 110 0 / .05) 0 17%, transparent 21%),
+    /* curl: the lifted part turns away from the ceiling light */
+    linear-gradient(to bottom, transparent 45%, rgb(255 255 240 / .10) 62%, rgb(90 80 0 / .07) 88%, rgb(60 55 0 / .13) 100%),
+    radial-gradient(60% 35% at 100% 100%, rgb(60 50 0 / .10), transparent 70%),
+    radial-gradient(60% 35% at 0% 100%, rgb(60 50 0 / .08), transparent 70%);
+  /* the edge that faces up catches a sliver of light */
+  box-shadow: inset 0 -1px 0 rgb(255 255 230 / .55), inset 0 0 0 .5px rgb(90 80 0 / .12);
+}
+
+/* handwriting: ink bleeds into paper (multiply) and wobbles (displacement) */
+.ink {
+  position: absolute; inset: 12% 10% 8% 11%;
+  display: flex; flex-direction: column; gap: .02em;
+  color: rgb(22 24 32 / .9);
+  mix-blend-mode: multiply;
+  filter: url(#ink-rough);
+  transform: rotate(var(--ink-rot, 0deg));
+  line-height: .98;
+}
+.ink span { display: block; transform: translate(var(--lx, 0), 0) rotate(var(--lr, 0deg)); transform-origin: 0 50%; white-space: nowrap; }
+.ink--reenie   { font-family: "Reenie Beanie", cursive; font-size: calc(26px * var(--fs, 1)); }
+.ink--nanum    { font-family: "Nanum Pen Script", cursive; font-size: calc(27px * var(--fs, 1)); line-height: .86; }
+.ink--caveat   { font-family: "Caveat", cursive; font-size: calc(20px * var(--fs, 1)); font-weight: 500; }
+.ink--marker   { font-family: "Permanent Marker", cursive; font-size: calc(15px * var(--fs, 1)); color: rgb(20 22 30 / .86); line-height: 1.15; }
+.ink--gochi    { font-family: "Gochi Hand", cursive; font-size: calc(19px * var(--fs, 1)); }
+
+/* ---------- brushed steel plate ---------- */
+.plate-face {
+  position: absolute; inset: 0; border-radius: 6px;
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / .0) 0%, rgb(255 255 255 / .35) 30%, rgb(255 255 255 / 0) 52%, rgb(255 255 255 / .18) 74%, rgb(0 0 0 / .05) 100%),
+    var(--tex-brushed) 0 0 / 160px 240px,
+    linear-gradient(180deg, #c3c7c9, #a9adb0);
+  background-blend-mode: normal, soft-light, normal;
+  box-shadow:
+    inset 0 1px .5px rgb(255 255 255 / .75),
+    inset 1px 0 .5px rgb(255 255 255 / .35),
+    inset -1px 0 1px rgb(0 0 0 / .25),
+    inset 0 -1.5px 1.5px rgb(0 0 0 / .35),
+    inset 0 0 0 3px rgb(255 255 255 / .06),
+    inset 0 0 6px 2px rgb(0 0 0 / .08);
+}
+.screw {
+  position: absolute; left: 50%; width: 11px; height: 11px; margin-left: -5.5px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #eef0f1, #a8adb0 45%, #6f7478 100%);
+  box-shadow: 0 .5px 1px rgb(0 0 0 / .45), inset 0 0 0 .5px rgb(0 0 0 / .3);
+}
+.screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 4.8px; height: 1.4px; background: rgb(40 44 48 / .8); box-shadow: 0 .5px 0 rgb(255 255 255 / .5); transform: rotate(var(--sr)); }
+.screw:nth-child(1) { top: 13%; }
+.screw:nth-child(2) { bottom: 13%; }
+
+/* ---------- the "photograph" finish ---------- */
+/* light falloff across everything on the wall (objects + wall share one light) */
+.falloff {
+  position: absolute; inset: -800px; pointer-events: none; z-index: 90;
+  background:
+    radial-gradient(52% 50% at 44% 36%, #fff 0%, #f9f9f9 45%, #dcdcdd 75%, #b9babc 100%);
+  mix-blend-mode: multiply;
+  opacity: var(--falloff-o);
+}
+.grain {
+  position: fixed; inset: 0; pointer-events: none; z-index: 1000;
+  background: var(--tex-grain) 0 0 / 220px 220px;
+  mix-blend-mode: overlay; opacity: var(--grain-o);
+}
+.vignette {
+  position: fixed; inset: 0; pointer-events: none; z-index: 999;
+  background: radial-gradient(130% 110% at 50% 45%, transparent 55%, rgb(20 22 26 / .35) 100%);
+  mix-blend-mode: multiply; opacity: var(--vignette-o);
+}
+
+/* ---------- paper wear (generated per sheet in engine.paperWear) ---------- */
+.sheet { transform: rotate(var(--rot, 0deg)) skewX(var(--skew, 0deg)); }
+.wear-cockle { position: absolute; inset: 0; pointer-events: none; background-size: 100% 100%; mix-blend-mode: hard-light; }
+.wear-crease {
+  position: absolute; top: 0; width: 10px; margin-left: -5px; pointer-events: none;
+  transform-origin: 50% 0; transform: rotate(calc(var(--a) * -1));
+  background: linear-gradient(90deg, transparent, rgb(0 0 0 / .04) 38%, rgb(0 0 0 / .10) 48.5%, rgb(255 255 255 / .5) 52%, rgb(255 255 255 / .1) 62%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 8%, transparent); mask-image: linear-gradient(to bottom, #000 8%, transparent);
+}
+.wear-curl { position: absolute; bottom: 0; width: var(--s); height: var(--s); pointer-events: none; }
+.wear-curl--r { right: 0; background: linear-gradient(to top left, rgb(255 255 255 / .5) 0%, rgb(255 255 255 / .14) 22%, rgb(40 40 50 / .08) 52%, transparent 78%); }
+.wear-curl--l { left: 0;  background: linear-gradient(to top right, rgb(255 255 255 / .5) 0%, rgb(255 255 255 / .14) 22%, rgb(40 40 50 / .08) 52%, transparent 78%); }
+.shadow.corner {
+  inset: auto; bottom: 0; width: var(--s); height: var(--s);
+  background: radial-gradient(circle at var(--cx) 100%, rgb(28 34 46 / .45), transparent 68%);
+  filter: blur(4px);
+}
+.shadow.corner--r { right: 0; --cx: 100%; transform: translate(3px, 5px); }
+.shadow.corner--l { left: 0;  --cx: 0%;   transform: translate(1px, 5px); }
+.wear-fold {
+  position: absolute; left: -2px; right: -2px; height: 44px; margin-top: -22px; pointer-events: none;
+  transform: rotate(var(--fa));
+  background: linear-gradient(to bottom, transparent, rgb(0 0 0 / .03) 38%, rgb(0 0 0 / .085) 49.4%, rgb(255 255 255 / .55) 50.6%, rgb(255 255 255 / .12) 62%, transparent);
+}
+.wear-smudge {
+  position: absolute; width: var(--sz); height: calc(var(--sz) * .7); pointer-events: none;
+  background: radial-gradient(closest-side, rgb(70 70 75 / .07), rgb(70 70 75 / .03) 60%, transparent);
+  mix-blend-mode: multiply; transform: rotate(-20deg);
+}

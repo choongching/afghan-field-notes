@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Reenie+Beanie&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #37332e; --paper: #ebe7dd; --red: #b8432f; --green: #5f8c4e; }
+  html[data-ink="iron"]  { --ink: #4a3121; --paper: #ebe2cf; }
+  html[data-ink="sepia"] { --ink: #5b4634; --paper: #e9e1d0; }
+  html, body { margin: 0; height: 100%; background: #1b1c1e; font: 13px/1.4 Inter, system-ui, sans-serif; color: #ddd; }
+  .bench { display: grid; grid-template-columns: 1fr 260px; height: 100vh; }
+  .view { position: relative; overflow: hidden; background: var(--paper); }
+  /* paper tooth + a little uneven light, so the drawing sits on a surface */
+  .view::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: var(--tex-paper) 0 0 / 240px; mix-blend-mode: soft-light; opacity: .35; }
+  .view::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(90% 80% at 40% 30%, transparent 45%, rgb(60 50 30 / .14)); }
+  #map { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  .sketch-map text { fill: var(--ink); }
+  .t-place   { font: 24px "Architects Daughter", cursive; letter-spacing: .12em; fill-opacity: .85; }
+  .t-place--big { font-size: 32px; }
+  .t-place--small { font: 30px "Reenie Beanie", cursive; letter-spacing: 0; }
+  .t-region  { font: 34px "Architects Daughter", cursive; letter-spacing: .5em; fill-opacity: .7; }
+  .t-region--soft { font: 38px "Reenie Beanie", cursive; letter-spacing: .1em; fill-opacity: .6; }
+  .t-river   { font: 34px "Reenie Beanie", cursive; fill-opacity: .7; }
+  .t-note    { font: 40px "Reenie Beanie", cursive; fill-opacity: .85; }
+  .t-note--small { font-size: 32px; }
+  .t-landmark { font: 26px "Reenie Beanie", cursive; fill-opacity: .8; }
+  .t-trip { font: 30px "Reenie Beanie", cursive; fill: var(--red) !important; fill-opacity: .9; }
+  .t-region--wakhan { font-size: 24px; letter-spacing: .28em; fill-opacity: .8; }
+  .w-title  { font: 30px "Architects Daughter", cursive; letter-spacing: .3em; }
+  .w-place  { font: 19px "Architects Daughter", cursive; letter-spacing: .06em; fill-opacity: .9; }
+  .w-small  { font: 22px "Reenie Beanie", cursive; fill-opacity: .8; }
+  .w-note   { font: 25px "Reenie Beanie", cursive; fill-opacity: .9; }
+  .w-peak   { font: 17px "Architects Daughter", cursive; letter-spacing: .08em; }
+  .w-region { font: 17px "Architects Daughter", cursive; letter-spacing: .5em; fill-opacity: .55; }
+  .w-country { font: 18px "Architects Daughter", cursive; letter-spacing: .6em; fill-opacity: .35; }
+  .w-river  { font: 22px "Reenie Beanie", cursive; fill-opacity: .7; }
+  .t-compass { font: 34px "Architects Daughter", cursive; }
+  .t-scale   { font: 26px "Reenie Beanie", cursive; fill-opacity: .8; }
+  html.no-pencil #map g[filter] { filter: none; }
+  .panel { padding: 18px; background: #232427; border-left: 1px solid #333; overflow: auto; }
+  .panel h1 { font-size: 15px; margin: 0 0 4px; } .panel p { color: #999; margin: 0 0 14px; }
+  .panel fieldset { border: 1px solid #3a3b3f; border-radius: 6px; margin: 0 0 14px; padding: 6px 12px 10px; }
+  .panel legend { color: #aaa; padding: 0 4px; }
+  .panel label { display: flex; gap: 8px; align-items: center; margin: 5px 0; }
+  .panel input[type=text] { width: 100%; box-sizing: border-box; background: #18191b; color: #ddd; border: 1px solid #3a3b3f; border-radius: 4px; padding: 6px; }
+  .panel button { margin-top: 6px; background: #3a3b3f; color: #eee; border: 0; border-radius: 4px; padding: 7px 10px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="bench">
+  <div class="view" id="view"><div id="map"></div></div>
+  <form class="panel" id="panel">
+    <h1>Map lab — Marco Polo sketch</h1>
+    <p>Real geography (Natural Earth), drawn by hand. Re-roll the seed for a different hand.</p>
+    <fieldset><legend>Ink</legend>
+      <label><input type="radio" name="ink" value="graphite" checked> Graphite pencil</label>
+      <label><input type="radio" name="ink" value="iron"> Iron-gall ink</label>
+      <label><input type="radio" name="ink" value="sepia"> Sepia</label>
+      <label><input type="checkbox" name="pencil" checked> Pencil grain</label>
+      <label><input type="checkbox" name="flaws" checked> Traveller flaws</label>
+    </fieldset>
+    <fieldset><legend>Layers</legend>
+      <label><input type="checkbox" name="border" checked> Border</label>
+      <label><input type="checkbox" name="rivers" checked> Rivers</label>
+      <label><input type="checkbox" name="mountains" checked> Mountains</label>
+      <label><input type="checkbox" name="deserts" checked> Desert</label>
+      <label><input type="checkbox" name="places" checked> Places</label>
+      <label><input type="checkbox" name="labels" checked> Labels</label>
+      <label><input type="checkbox" name="hills" checked> Hills</label>
+      <label><input type="checkbox" name="landmarks" checked> Landmarks</label>
+      <label><input type="checkbox" name="trip" checked> Trip route (sample, red)</label>
+      <label><input type="checkbox" name="route"> Marco Polo route</label>
+      <label><input type="checkbox" name="notes" checked> Margin notes</label>
+      <label><input type="checkbox" name="compass" checked> North &amp; scale</label>
+    </fieldset>
+    <fieldset><legend>Hand</legend>
+      <input type="text" name="seed" value="marco">
+      <button type="button" id="reroll">Re-roll</button>
+    </fieldset>
+  </form>
+</div>
+<script type="module">
+  import { drawMap, FRAME } from '../js/map/sketch-map.js';
+  import { textures } from '../js/textures.js';
+  import { loadTerrain } from '../js/map/terrain.js';
+  document.documentElement.style.setProperty('--tex-paper', textures.paper());
+
+  const [data, terrain] = await Promise.all([fetch('../data/afghanistan.json').then((r) => r.json()), loadTerrain('../data/afg-elevation.json')]);
+  const panel = document.getElementById('panel'), host = document.getElementById('map'), view = document.getElementById('view');
+  const LAYERS = ['border', 'rivers', 'mountains', 'hills', 'landmarks', 'deserts', 'places', 'labels', 'trip', 'route', 'notes', 'compass'];
+
+  function render() {
+    const f = new FormData(panel);
+    document.documentElement.dataset.ink = f.get('ink');
+    document.documentElement.classList.toggle('no-pencil', !f.get('pencil'));
+    const layers = Object.fromEntries(LAYERS.map((k) => [k, f.has(k)]));
+    const t = performance.now();
+    host.innerHTML = drawMap(data, { seed: f.get('seed'), layers, flaws: f.has('flaws'), terrain });
+    console.info(`[map] drawn in ${(performance.now() - t).toFixed(0)}ms`);
+    fit();
+  }
+  function fit() {
+    const s = Math.min(view.clientWidth / FRAME.w, view.clientHeight / FRAME.h);
+    host.style.transform = `translate(${(view.clientWidth - FRAME.w * s) / 2}px, ${(view.clientHeight - FRAME.h * s) / 2}px) scale(${s})`;
+  }
+  panel.addEventListener('input', (e) => (e.target.name === 'ink' || e.target.name === 'pencil') ? (document.documentElement.dataset.ink = new FormData(panel).get('ink'), document.documentElement.classList.toggle('no-pencil', !panel.pencil.checked)) : render());
+  document.getElementById('reroll').onclick = () => { panel.seed.value = Math.random().toString(36).slice(2, 7); render(); };
+  addEventListener('resize', fit);
+  await document.fonts.ready;
+  render();
+</script>
+</body>
+</html>
