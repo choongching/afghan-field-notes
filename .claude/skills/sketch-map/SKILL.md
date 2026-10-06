@@ -150,6 +150,21 @@ per zoom tier → shown in Leaflet with live hand-lettered labels on top.
   whole-map view (negative zoom) disappears.
 - Photos load eagerly (no `loading="lazy"`): lazy images inside CSS-scaled Leaflet layers never "enter" the viewport.
 
+## Load performance (measured 2026-10-06: slow 4G map-start 13.6 s → 3.8 s; 2.4 MB → ~1 MB)
+- The preloader waits only for map.json, fonts, intro.json, **the outline plate** and the first t0 tiles. The other
+  plates start downloading *after* the outline lands and stream in during the opening (opening.js skips a plate until
+  its image is complete). If the outline isn't in within `OPENING_BUDGET` (6 s) — or Data Saver is on — no opening: map.
+- Photo prints load **160×120 thumbnails** (`thumbOf`: `thumb` in photos.json, or picsum resized by URL) and only after
+  the preloader (`loadThumbs()`); piles on screen at 3× (or opened) `sharpen()` to the full print (swap on load).
+- WebP: `alpha_quality=70, method=6` for tiles and plates (alpha was half of every file; visually identical).
+- index.html head: Leaflet **self-hosted** in `vendor/leaflet-1.9.4/` (SRI kept), `modulepreload` for site.js + its
+  imports, `preload` for map.json / photos.json / outline plate. New module imported by site.js → add a modulepreload.
+- Fonts: no Inter (system-ui for UI); Amatic SC requested with `&text=` (only the title/milestone glyphs).
+  Using Amatic for new text with other letters → extend that `text=` list or the glyphs fall back.
+- `_headers` (Cloudflare Pages): tiles 1 day + SWR, vendor immutable, js revalidate, checkin no-store.
+- Check-in poll backs off to 5 min while `latest.json` is 404. Measure with `visual-check/scripts/perf.mjs`.
+  (The local python server doesn't compress — Leaflet shows 147 KB there, ~42 KB on Cloudflare.)
+
 ## Opening scene (preloader → drawing → names → notes → photos)
 - Preloader `#preload`: hand-lettered title + a pencil line = load progress (`track()` in index.html). Min 0.9 s; never
   use `img.decode()` (hangs in background tabs); if the tab is hidden, wait for `visibilitychange` before playing.

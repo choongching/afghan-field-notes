@@ -2,14 +2,31 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://picsum.photos https://*.picsum.photos; connect-src 'self' https://api.open-meteo.com; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://picsum.photos https://*.picsum.photos; connect-src 'self' https://api.open-meteo.com; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Afghanistan Field Notes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Architects+Daughter&family=Reenie+Beanie&family=Inter:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Reenie+Beanie&display=swap" rel="stylesheet">
+<!-- Amatic SC only letters the title block and milestone tags: ask for just those glyphs (~5× smaller) -->
+<link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap&text=FIELDNOTSRMAGHfieldnotsrmagh%200123456789" rel="stylesheet">
+<link rel="stylesheet" href="./vendor/leaflet-1.9.4/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cpath d=%27M16 3 29 16 16 29 3 16Z%27 fill=%27%231aa0b4%27 stroke=%27%2337332e%27 stroke-width=%271.5%27/%3E%3C/svg%3E">
+<!-- start every script and the first data at once instead of discovering them one import at a time -->
+<link rel="preload" href="./vendor/leaflet-1.9.4/leaflet.js" as="script" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=">
+<link rel="modulepreload" href="./js/site.js">
+<link rel="modulepreload" href="./js/map/geo.js">
+<link rel="modulepreload" href="./js/textures.js">
+<link rel="modulepreload" href="./js/engine.js">
+<link rel="modulepreload" href="./js/map/pencil.js">
+<link rel="modulepreload" href="./js/map/photos.js">
+<link rel="modulepreload" href="./js/map/almanac.js">
+<link rel="modulepreload" href="./js/map/opening.js">
+<link rel="modulepreload" href="./js/map/checkin-pin.js">
+<link rel="preload" href="./tiles/map.json" as="fetch" crossorigin>
+<link rel="preload" href="./data/photos.json" as="fetch" crossorigin>
+<link rel="preload" href="./tiles/intro/outline.webp" as="image" fetchpriority="high">
 <style>
   :root { --paper: #ebe7dd; --ink: #37332e; --red: #b8432f; --green: #5f8c4e; --tile: #1aa0b4; --lz: 1; } /* tile: Blue Mosque turquoise — photo stops only */
   html, body { margin: 0; height: 100%; background: var(--paper); overflow: hidden; }
@@ -136,8 +153,8 @@
   .pp-held img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; filter: contrast(.95) saturate(.9) sepia(.08); }
   .pp-held figcaption { display: flex; gap: 14px; align-items: baseline; padding: 12px 2px 16px; font: 30px/1.1 "Reenie Beanie", cursive; color: var(--ink); }
   .pp-held figcaption b { font: 16px "Architects Daughter", cursive; letter-spacing: .08em; white-space: nowrap; }
-  .pp-held figcaption .n { margin-left: auto; font: 14px Inter, sans-serif; opacity: .5; }
-  .pp-nav { position: fixed; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; border: 0; background: rgb(255 255 255 / .85); font: 20px Inter, sans-serif; cursor: pointer; }
+  .pp-held figcaption .n { margin-left: auto; font: 14px system-ui, -apple-system, "Segoe UI", sans-serif; opacity: .5; }
+  .pp-nav { position: fixed; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; border: 0; background: rgb(255 255 255 / .85); font: 20px system-ui, -apple-system, "Segoe UI", sans-serif; cursor: pointer; }
   .pp-nav.prev { left: 24px; } .pp-nav.next { right: 24px; }
   .pp-held .pp-tape { width: 120px; height: 30px; left: 50%; margin-left: -60px; top: -14px; }
 
@@ -228,14 +245,14 @@
   @media (max-width: 600px) { .title-block { transform: rotate(-1.2deg) scale(.55); left: 18px; top: 16px; } }
 
   /* ---- chrome ---- */
-  .ui { position: fixed; z-index: 800; font: 500 13px/1 Inter, system-ui, sans-serif; color: #2b2d33; }
+  .ui { position: fixed; z-index: 800; font: 500 13px/1 system-ui, -apple-system, "Segoe UI", sans-serif; color: #2b2d33; }
   .ui button { font: inherit; color: inherit; background: rgb(255 255 255 / .75); border: 1px solid rgb(0 0 0 / .14); border-radius: 999px; padding: 9px 13px; cursor: pointer; backdrop-filter: blur(6px); }
   .ui button:hover { background: #fff; }
   .ui button:focus-visible { outline: 2px solid #2b2d33; outline-offset: 2px; }
   .zoom { right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
   .zoom button { width: 40px; height: 40px; padding: 0; font-size: 18px; }
   .hint { left: calc(50% - 70px); bottom: 20px; transform: translateX(-50%) rotate(-1deg); /* clear of the today note */ font: 24px "Reenie Beanie", cursive; color: rgb(30 32 40 / .75); transition: opacity .6s; pointer-events: none; }
-  .readout { left: 20px; bottom: 184px; font: 12px/1.4 Inter, sans-serif; background: rgb(255 255 255 / .8); border: 1px solid rgb(0 0 0 / .12); border-radius: 8px; padding: 8px 10px; opacity: 0; transition: opacity .3s; }
+  .readout { left: 20px; bottom: 184px; font: 12px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; background: rgb(255 255 255 / .8); border: 1px solid rgb(0 0 0 / .12); border-radius: 8px; padding: 8px 10px; opacity: 0; transition: opacity .3s; }
   .readout.on { opacity: 1; }
   /* zoomed in: a lettered note by the buttons — the way back out */
   .back-note { right: 66px; bottom: 26px; font: 22px/1 "Reenie Beanie", cursive; color: var(--ink); opacity: 0; translate: 6px 0; pointer-events: none;
@@ -269,7 +286,7 @@
   <svg class="tb-rule heavy" width="360" height="10" aria-hidden="true"></svg>
 </header>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="./vendor/leaflet-1.9.4/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="></script>
 <script type="module" src="./js/site.js"></script>
 </body>
 </html>

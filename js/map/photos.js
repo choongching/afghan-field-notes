@@ -38,6 +38,10 @@ const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const num = (v, d = 0) => (Number.isFinite(+v) ? +v : d);
 export const safeUrl = (u) => { const t = String(u ?? '').trim(); return /^https:\/\//i.test(t) || /^\.{0,2}\/(?!\/)/.test(t) ? t : ''; };
 
+// Piles at the overview are ~45 css px wide: load a small thumbnail first, the full print only when you lean in
+// near the pile or open it. Real photos can set `thumb` in photos.json; picsum placeholders are resized by URL.
+const thumbOf = (p) => safeUrl(p.thumb) || p.img.replace(/\/(\d+)\/(\d+)(\.jpg)?$/, '/160/120$3');
+
 function spread(n, r) {
   const cols = n <= 4 ? 2 : 3, rows = Math.ceil(n / cols);
   return Array.from({ length: n }, (_, i) => {
@@ -59,7 +63,7 @@ export function addPhotoPrints({ map, geo, stacks, toLatLng, reduced = false }) 
     initialize(s) {
       // numbers stay numbers (they go into style attributes), photos stay a list of {img, caption}
       this.s = { ...s, dx: num(s.dx), dy: num(s.dy), rot: num(s.rot), lon: num(s.lon), lat: num(s.lat),
-        photos: (Array.isArray(s.photos) ? s.photos : []).map((p) => ({ img: safeUrl(p?.img), caption: String(p?.caption ?? '') })) };
+        photos: (Array.isArray(s.photos) ? s.photos : []).map((p) => ({ img: safeUrl(p?.img), thumb: safeUrl(p?.thumb), caption: String(p?.caption ?? '') })) };
     },
     onAdd(m) {
       const { s } = this, r = rng(s.id);
@@ -75,7 +79,7 @@ export function addPhotoPrints({ map, geo, stacks, toLatLng, reduced = false }) 
         const [fx, fy, fr] = fan[i];
         return `<button type="button" class="pp${top ? ' pp-top' : ''}" style="z-index:${s.photos.length - i};--sx:${(top ? 0 : (r() - 0.5) * 24).toFixed(1)}px;--sy:${(top ? 0 : (r() - 0.5) * 16 + k * 0.8).toFixed(1)}px;--sr:${(top ? s.rot : s.rot + (r() < 0.5 ? -1 : 1) * (8 + r() * 22)).toFixed(1)}deg;--fx:${fx.toFixed(1)}px;--fy:${fy.toFixed(1)}px;--fr:${fr.toFixed(1)}deg;--d:${(i * 0.035).toFixed(3)}s" aria-label="${esc(s.title)}, photo ${i + 1} of ${s.photos.length}" data-i="${i}">
           <span class="pp-paper" style="clip-path:${deckle(r)}">
-            <span class="pp-photo"><img src="${esc(safeUrl(p.img))}" alt="" decoding="async"></span>
+            <span class="pp-photo"><img data-thumb="${esc(thumbOf(p))}" data-full="${esc(p.img)}" alt="" decoding="async" fetchpriority="low"></span>
             <span class="pp-cap">${esc(p.caption)}</span>
           </span></button>`;
       }).reverse().join('');
@@ -112,7 +116,20 @@ export function addPhotoPrints({ map, geo, stacks, toLatLng, reduced = false }) 
     _reset() { const k = 2 ** this._map.getZoom(); L.DomUtil.setTransform(this._el, this._map.latLngToLayerPoint(this._ll), k); this._el.style.setProperty('--s', k); },
     _animate(e) { const k = 2 ** e.zoom; L.DomUtil.setTransform(this._el, this._map._latLngToNewLayerPoint(this._ll, e.zoom, e.center), k); this._el.style.setProperty('--s', k); },
 
+    // thumbnails are fetched on request (the page asks once the opening's own images are in)
+    loadThumbs() {
+      for (const im of this._el.querySelectorAll('.pp img[data-thumb]')) if (!im.getAttribute('src')) im.src = im.dataset.thumb;
+    },
+    // swap the thumbnails for the full prints (once)
+    sharpen() {
+      if (this._sharp) return;
+      this._sharp = true;
+      for (const im of this._el.querySelectorAll('.pp img[data-full]')) {
+        const full = new Image(); full.onload = () => { im.src = full.src; }; full.src = im.dataset.full; // no blank frame while it loads
+      }
+    },
     deal() {
+      this.sharpen();
       if (open === this) return;
       if (open) open.gather();
       const m = this._map;
@@ -129,6 +146,14 @@ export function addPhotoPrints({ map, geo, stacks, toLatLng, reduced = false }) 
   });
 
   const layers = shown.map((s) => new Stack(s).addTo(map));
+  // leaning in: sharpen the piles in (or near) the view
+  const sharpenNear = () => {
+    if (map.getZoom() < map.getMaxZoom() - 0.02) return;
+    const near = map.getBounds().pad(0.05); // just what is on screen; panning sharpens the rest as it comes into view
+    for (const ly of layers) if (near.contains(ly._ll)) ly.sharpen();
+  };
+  map.on('zoomend moveend', sharpenNear);
+  sharpenNear(); // opened already zoomed in (a ?f= link)
   map.on('click', () => open?.gather());
   // piles only loosen on hover at the overview; up close, hover arranges them
   const mark = () => pane.classList.toggle('close', map.getZoom() > map.getMaxZoom() - 0.02);

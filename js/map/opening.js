@@ -132,6 +132,7 @@ export function createOpening({ map, frame, ll, guides, images }) {
     out.clearRect(0, 0, W, H);
     for (const pl of plates) {
       if (!pl.started && pl.fill <= 0) continue;
+      if (!(pl.img.complete && pl.img.naturalWidth)) continue; // still streaming in: its mask keeps growing, it appears when it lands
       if (pl.fill >= 1) { out.drawImage(pl.img, 0, 0, W, H); continue; }
       tmp.globalCompositeOperation = 'copy';
       tmp.drawImage(pl.mask, 0, 0, W, H);

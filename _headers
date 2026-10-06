@@ -1,0 +1,25 @@
+# Cloudflare Pages response headers (also understood by Netlify). Ignored by GitHub Pages.
+# Caching: the map tiles and opening plates only change when the map is rebuilt, so browsers keep them a day
+# and refresh in the background; Leaflet lives under a versioned path, so it can be cached for good.
+# Pages and scripts are revalidated every visit (cheap 304s via ETag) so a deploy shows up immediately.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+
+/tiles/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/vendor/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=3600
+
+/js/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/checkin/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex

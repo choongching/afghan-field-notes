@@ -86,7 +86,12 @@ export function addCheckinPin({ map, geo, toLatLng, url, every = 30_000, stops =
 
   async function refresh() {
     let j;
-    try { j = await (await fetch(url, { cache: 'no-store' })).text(); } catch { return; } // offline: keep what we have
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      missing = res.status === 404; // nothing published (yet): check far less often
+      if (!res.ok) return;
+      j = await res.text();
+    } catch { return; } // offline: keep what we have
     if (j === lastJson) return;
     lastJson = j;
     let c = null;
@@ -102,8 +107,10 @@ export function addCheckinPin({ map, geo, toLatLng, url, every = 30_000, stops =
     requestAnimationFrame(() => { layout(el, c); requestAnimationFrame(() => el.classList.add('in')); }); // the pencil draws the arrow in
   }
 
-  refresh();
-  setInterval(refresh, every);
+  // poll every 30 s while there is a check-in to follow; every 5 min while none has been published
+  let missing = false;
+  const loop = async () => { await refresh(); setTimeout(loop, missing ? 5 * 60_000 : every); };
+  loop();
   addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
   return { refresh };
 }

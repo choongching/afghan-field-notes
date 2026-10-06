@@ -21,7 +21,9 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches || still;
 // The opening drawing plays at the whole-map view (the default view). ?t=2.5 holds it at
 // that moment for screenshots; deep links (?f=) and reduced motion go straight to the map.
 const holdAt = qs.has('t') ? +qs.get('t') : null;
-const withOpening = !qs.get('f') && (holdAt !== null || !reduced);
+// Data Saver on: skip the opening (and its images) and show the finished map straight away
+const saveData = navigator.connection?.saveData === true;
+let withOpening = !qs.get('f') && (holdAt !== null || (!reduced && !saveData));
 if (withOpening) html.classList.add('opening', 'op-drawing');
 
 // ---- preloader: a pencil line grows as each piece arrives ----
@@ -29,15 +31,29 @@ const started = performance.now(), sleep = (ms) => new Promise((r) => setTimeout
 const preload = document.getElementById('preload');
 if (still) preload.hidden = true;
 Promise.race([document.fonts.load('30px "Architects Daughter"'), sleep(500)]).then(() => preload.classList.add('fonts-in'));
-const TOTAL = withOpening ? 8 : 2;
+const TOTAL = withOpening ? 5 : 2; // map.json, fonts (+ intro.json, the outline plate, the first tiles)
 let loaded = 0;
 const track = (p) => Promise.resolve(p).finally(() => preload.querySelector('.lead').style.setProperty('--left', (1 - ++loaded / TOTAL).toFixed(3)));
 const PLATES = ['outline', 'water', 'relief', 'marks'];
+// The opening needs only the outline plate to start (it's drawn first); the other three stream in while it
+// plays — opening.js reveals a plate once its image has arrived. A connection too slow to fetch the outline
+// within OPENING_BUDGET gets the finished map instead of a stalled preloader.
+const OPENING_BUDGET = 6000;
+const plateImgs = withOpening ? Object.fromEntries(PLATES.map((n) => { const im = new Image(); im.decoding = 'async'; return [n, im]; })) : null;
+if (plateImgs) {
+  // the outline gets the bandwidth to itself; the later plates start once it has landed
+  const rest = () => PLATES.slice(1).forEach((n) => { plateImgs[n].src ||= `./tiles/intro/${n}.webp`; });
+  plateImgs.outline.fetchPriority = 'high';
+  plateImgs.outline.addEventListener('load', rest, { once: true });
+  plateImgs.outline.addEventListener('error', rest, { once: true });
+  plateImgs.outline.src = './tiles/intro/outline.webp';
+}
 const openingAssets = withOpening && Promise.all([
   track(fetch('./tiles/intro.json').then((r) => r.json())),
-  ...PLATES.map((n) => track(new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = `./tiles/intro/${n}.webp`; }))),
+  track(new Promise((ok, no) => { const im = plateImgs.outline; if (im.complete && im.naturalWidth) ok(); else { im.onload = ok; im.onerror = no; } })),
 ]);
 
+const stacksReq = fetch('./data/photos.json').then((r) => r.json()); // in parallel — it was waiting behind the fonts
 const meta = await track(fetch('./tiles/map.json').then((r) => r.json()));
 const { frame, tiers, labels } = meta;
 const geo = createGeo({ seed: meta.seed, flaws: true }); // same coordinate system the drawing used
@@ -254,7 +270,7 @@ reveal(map.getZoom());
 zoomedState(map.getZoom()); // opened via a ?f=3 deep link → start with details stepped aside
 requestAnimationFrame(declutter);
 // photo prints pinned to their places (placeholders until the real trip photos)
-const { stacks } = await (await fetch('./data/photos.json')).json();
+const { stacks } = await stacksReq;
 const stackLayers = addPhotoPrints({ map, geo, stacks, toLatLng: ll, reduced });
 
 mountAlmanac(document.getElementById('almanac'));
@@ -264,13 +280,16 @@ mountAlmanac(document.getElementById('almanac'));
   document.querySelector('.tb-rule.heavy').innerHTML = brush([[1, 5], [120, 4], [240, 6], [358, 4.6]], tr, { w: 3.4, o: 0.85, taperIn: 0.04, taperOut: 0.18 }) + brush([[6, 7.5], [150, 6.6], [300, 8]], tr, { w: 1.4, o: 0.4, taperIn: 0.1, taperOut: 0.4 });
 }
 
-let guides, images;
+let guides;
 if (withOpening) {
-  [guides, ...images] = await openingAssets;
-  await Promise.race([track(t0Loaded), sleep(8000)]); // the real tiles must be ready to take over
+  const left = Math.max(1000, OPENING_BUDGET - (performance.now() - started));
+  const ready = await Promise.race([openingAssets.then(([g]) => g, () => null), sleep(left).then(() => null)]);
+  if (ready) { guides = ready; await Promise.race([track(t0Loaded), sleep(8000)]); } // the real tiles must be ready to take over
+  else { withOpening = false; html.classList.remove('opening', 'op-drawing'); await Promise.race([t0Loaded, sleep(4000)]); } // too slow: just the map
 }
 await sleep(Math.max(0, 900 - (performance.now() - started))); // never just flash the title page
 preload.classList.add('out');
+for (const ly of stackLayers) ly.loadThumbs(); // the prints only appear late in the opening: they waited for the sheet
 setTimeout(() => { preload.hidden = true; }, 600);
 const startCheckin = () => addCheckinPin({ map, geo, toLatLng: ll, url: CHECKIN_URL, stops: stacks.filter((s) => s.precision !== 'hidden').map((s) => [s.lon, s.lat]) });
 if (!withOpening) startCheckin();
@@ -310,7 +329,7 @@ async function playOpening() {
   html.classList.add('op-play'); // start every scheduled animation now
   const HANDLERS = ['dragging', 'touchZoom', 'boxZoom', 'keyboard']; // (doubleClickZoom stays off: a click leans in)
   HANDLERS.forEach((h) => map[h]?.disable());
-  const op = createOpening({ map, frame, ll, guides, images: Object.fromEntries(PLATES.map((n, i) => [n, images[i]])) });
+  const op = createOpening({ map, frame, ll, guides, images: plateImgs });
   // any touch, scroll or key finishes the drawing at once
   let skipped = false;
   const skip = () => { skipped = true; op.skip(); html.classList.remove('opening', 'op-play'); };

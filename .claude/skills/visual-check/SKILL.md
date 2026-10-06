@@ -40,6 +40,11 @@ Wait **≥ 8 s**: the page has a preloader (fonts, tiles, weather). A capture wi
 empty today note, means it was taken too early — re-run with a longer wait before debugging. Crop with PIL to
 inspect details (e.g. the today note ≈ `(900,540,1380,773)` at 1440×860).
 
+## Load performance
+`node .claude/skills/visual-check/scripts/perf.mjs "http://localhost:5173/?v=N" slow4g|fast` — cold-cache run with
+network throttling: prints preloader/opening timings, LCP, long tasks, and KB/requests per category (`LIST=1` for the
+request waterfall). Change `?v=` each run. Run one at a time (parallel Chromes starve each other).
+
 ## Check-ins
 `npm run dev` serves the site + check-in API on :5174. For tests, run it with `FIELD_NOTES_HOME=<scratchpad dir> PORT=5199` so
 the user's real `~/.field-notes` history is never touched, and delete `local-r2/` afterwards, or test pins show on the map.

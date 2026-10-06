@@ -15,7 +15,7 @@ bash .claude/skills/map-build/scripts/rebuild.sh --data   # also rebuild data/af
 ```
 It syntax-checks `js/map/*.js`, runs the coordinate test, renders every tier × zoom with resvg,
 writes `tiles/map.json` (labels), clears old tiles, slices 256 px WebP tiles. Expect roughly
-"~790 tiles, ~8 MB" and "~75 labels", plus "intro plates ×4".
+"~830 tiles, ~5 MB" and "~83 labels", plus "intro plates ×4" (~450 KB). The build takes ~85 s (WebP method 6).
 
 ## Pipeline (for when something breaks)
 1. `tools/build-map-data.py` → `data/afghanistan.json` (Natural Earth 10m in `data/raw/`; downloads are cached there).
